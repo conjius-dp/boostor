@@ -3,6 +3,7 @@
 A simple audio plugin with a single gain knob ranging from -inf (silence) to +24 dB. The gain parameter is fully automatable, so DAWs can map it to any MIDI controller.
 
 **Formats:** VST3, AU, Standalone
+**Platform:** macOS only (for now)
 
 ## Dependencies
 
