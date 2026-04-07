@@ -129,6 +129,91 @@ public:
             expect(processor.isBusesLayoutSupported(layout),
                    "stereo in/out should be supported");
         }
+
+        beginTest("Unity gain bypass leaves buffer untouched");
+        {
+            GainKnobAudioProcessor processor;
+            processor.getAPVTS().getParameterAsValue("gain").setValue(0.0f);
+
+            constexpr int numSamples = 512;
+            juce::AudioBuffer<float> buffer(2, numSamples);
+            for (int ch = 0; ch < 2; ++ch)
+                for (int i = 0; i < numSamples; ++i)
+                    buffer.setSample(ch, i, static_cast<float>(i) / numSamples);
+
+            juce::MidiBuffer midi;
+            processor.prepareToPlay(44100.0, numSamples);
+            // Run two blocks so smoothing settles
+            processor.processBlock(buffer, midi);
+
+            juce::AudioBuffer<float> buffer2(2, numSamples);
+            for (int ch = 0; ch < 2; ++ch)
+                for (int i = 0; i < numSamples; ++i)
+                    buffer2.setSample(ch, i, static_cast<float>(i) / numSamples);
+
+            processor.processBlock(buffer2, midi);
+
+            for (int ch = 0; ch < 2; ++ch)
+                for (int i = 0; i < numSamples; ++i)
+                    expectWithinAbsoluteError(buffer2.getSample(ch, i),
+                                              static_cast<float>(i) / numSamples, 0.0001f,
+                                              "unity gain should be a no-op");
+        }
+
+        beginTest("Silence at -100 dB clears buffer efficiently");
+        {
+            GainKnobAudioProcessor processor;
+            processor.getAPVTS().getParameterAsValue("gain").setValue(-100.0f);
+
+            constexpr int numSamples = 512;
+            juce::AudioBuffer<float> buffer(2, numSamples);
+            for (int ch = 0; ch < 2; ++ch)
+                for (int i = 0; i < numSamples; ++i)
+                    buffer.setSample(ch, i, 0.75f);
+
+            juce::MidiBuffer midi;
+            processor.prepareToPlay(44100.0, numSamples);
+            // Two blocks to settle smoothing
+            processor.processBlock(buffer, midi);
+
+            for (int ch = 0; ch < 2; ++ch)
+                for (int i = 0; i < numSamples; ++i)
+                    buffer.setSample(ch, i, 0.75f);
+            processor.processBlock(buffer, midi);
+
+            for (int ch = 0; ch < 2; ++ch)
+                for (int i = 0; i < numSamples; ++i)
+                    expectWithinAbsoluteError(buffer.getSample(ch, i), 0.0f, 0.0001f,
+                                              "-100 dB should zero the buffer");
+        }
+
+        beginTest("SIMD path produces correct gain for +12 dB");
+        {
+            GainKnobAudioProcessor processor;
+            processor.getAPVTS().getParameterAsValue("gain").setValue(12.0f);
+
+            constexpr int numSamples = 1024;
+            juce::AudioBuffer<float> buffer(2, numSamples);
+            for (int ch = 0; ch < 2; ++ch)
+                for (int i = 0; i < numSamples; ++i)
+                    buffer.setSample(ch, i, 0.1f);
+
+            juce::MidiBuffer midi;
+            processor.prepareToPlay(44100.0, numSamples);
+            // Two blocks so smoothing settles into SIMD fast path
+            processor.processBlock(buffer, midi);
+
+            for (int ch = 0; ch < 2; ++ch)
+                for (int i = 0; i < numSamples; ++i)
+                    buffer.setSample(ch, i, 0.1f);
+            processor.processBlock(buffer, midi);
+
+            float expected = 0.1f * juce::Decibels::decibelsToGain(12.0f);
+            for (int ch = 0; ch < 2; ++ch)
+                for (int i = 0; i < numSamples; ++i)
+                    expectWithinAbsoluteError(buffer.getSample(ch, i), expected, 0.01f,
+                                              "SIMD path should apply +12 dB correctly");
+        }
     }
 };
 

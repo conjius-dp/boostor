@@ -35,7 +35,8 @@ public:
 
 private:
     juce::AudioProcessorValueTreeState apvts;
-    juce::SmoothedValue<float> smoothedGain;
+    std::atomic<float>* gainParam = nullptr; // cached pointer — no hashmap lookup per block
+    juce::SmoothedValue<float, juce::ValueSmoothingTypes::Multiplicative> smoothedGain;
 
     static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
 

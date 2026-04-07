@@ -9,6 +9,7 @@ GainKnobAudioProcessor::GainKnobAudioProcessor()
                          .withOutput("Output", juce::AudioChannelSet::stereo(), true)),
       apvts(*this, nullptr, "Parameters", createParameterLayout())
 {
+    gainParam = apvts.getRawParameterValue("gain");
 }
 
 juce::AudioProcessorValueTreeState::ParameterLayout
@@ -30,7 +31,7 @@ GainKnobAudioProcessor::createParameterLayout()
 void GainKnobAudioProcessor::prepareToPlay(double sampleRate, int /*samplesPerBlock*/)
 {
     smoothedGain.reset(sampleRate, 0.02);
-    float gainDB = apvts.getRawParameterValue("gain")->load();
+    float gainDB = gainParam->load();
     smoothedGain.setCurrentAndTargetValue(
         juce::Decibels::decibelsToGain(gainDB, -100.0f));
 }
@@ -51,30 +52,51 @@ void GainKnobAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
 {
     juce::ScopedNoDenormals noDenormals;
 
-    auto totalNumInputChannels = getTotalNumInputChannels();
-    auto totalNumOutputChannels = getTotalNumOutputChannels();
+    const auto numChannels = getTotalNumInputChannels();
+    const auto numOutputChannels = getTotalNumOutputChannels();
+    const auto numSamples = buffer.getNumSamples();
 
-    for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
-        buffer.clear(i, 0, buffer.getNumSamples());
+    for (auto i = numChannels; i < numOutputChannels; ++i)
+        buffer.clear(i, 0, numSamples);
 
-    float gainDB = apvts.getRawParameterValue("gain")->load();
-    float targetGain = juce::Decibels::decibelsToGain(gainDB, -100.0f);
+    const float gainDB = gainParam->load();
+    const float targetGain = juce::Decibels::decibelsToGain(gainDB, -100.0f);
     smoothedGain.setTargetValue(targetGain);
 
     if (smoothedGain.isSmoothing())
     {
-        for (int sample = 0; sample < buffer.getNumSamples(); ++sample)
+        // Smoothing path: hoist write pointers out of per-sample loop
+        float* channelPtrs[2];
+        const auto chCount = juce::jmin(numChannels, 2);
+        for (int ch = 0; ch < chCount; ++ch)
+            channelPtrs[ch] = buffer.getWritePointer(ch);
+
+        for (int i = 0; i < numSamples; ++i)
         {
-            float g = smoothedGain.getNextValue();
-            for (int ch = 0; ch < totalNumInputChannels; ++ch)
-                buffer.getWritePointer(ch)[sample] *= g;
+            const float g = smoothedGain.getNextValue();
+            for (int ch = 0; ch < chCount; ++ch)
+                channelPtrs[ch][i] *= g;
         }
     }
     else
     {
-        float g = smoothedGain.getNextValue();
-        for (int ch = 0; ch < totalNumInputChannels; ++ch)
-            buffer.applyGain(ch, 0, buffer.getNumSamples(), g);
+        const float g = smoothedGain.getCurrentValue();
+
+        // Fast path: unity gain — skip entirely
+        if (g == 1.0f)
+            return;
+
+        // Fast path: silence — clear is cheaper than multiply
+        if (g == 0.0f)
+        {
+            buffer.clear();
+            return;
+        }
+
+        // SIMD-accelerated gain via FloatVectorOperations
+        for (int ch = 0; ch < numChannels; ++ch)
+            juce::FloatVectorOperations::multiply(
+                buffer.getWritePointer(ch), g, numSamples);
     }
 }
 
