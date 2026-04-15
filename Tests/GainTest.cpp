@@ -7,7 +7,7 @@
 class GainParameterTest : public juce::UnitTest
 {
 public:
-    GainParameterTest() : juce::UnitTest("Gain Parameter Tests") {}
+    GainParameterTest() : juce::UnitTest("Gain Parameter Tests", "GainKnob") {}
 
     void runTest() override
     {
@@ -271,7 +271,7 @@ static GainParameterTest gainParameterTest;
 class KnobDesignTest : public juce::UnitTest
 {
 public:
-    KnobDesignTest() : juce::UnitTest("Knob Design Tests") {}
+    KnobDesignTest() : juce::UnitTest("Knob Design Tests", "GainKnob") {}
 
     void runTest() override
     {
@@ -401,7 +401,7 @@ static KnobDesignTest knobDesignTest;
 int main()
 {
     juce::UnitTestRunner runner;
-    runner.runAllTests();
+    runner.runTestsInCategory("GainKnob");
 
     int failures = 0;
     for (int i = 0; i < runner.getNumResults(); ++i)
