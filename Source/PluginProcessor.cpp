@@ -1,3 +1,4 @@
+// GainKnob audio processor
 #include "PluginProcessor.h"
 #ifndef GAINKNOB_TESTS
 #include "PluginEditor.h"
