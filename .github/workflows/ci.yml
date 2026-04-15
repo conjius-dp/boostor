@@ -17,31 +17,26 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install ccache
-        run: brew install ccache
+      - name: Install tools
+        run: brew install ccache lcov
 
       - name: Cache JUCE
         id: cache-juce
         uses: actions/cache@v4
         with:
-          path: ../../Downloads/JUCE
+          path: JUCE
           key: juce-8.0.12
 
       - name: Clone JUCE
         if: steps.cache-juce.outputs.cache-hit != 'true'
-        run: |
-          mkdir -p ../../Downloads
-          git clone --depth 1 --branch 8.0.12 https://github.com/juce-framework/JUCE.git ../../Downloads/JUCE
-
-      - name: Symlink JUCE
-        run: ln -s ../../Downloads/JUCE JUCE
+        run: git clone --depth 1 --branch 8.0.12 https://github.com/juce-framework/JUCE.git JUCE
 
       - name: Cache ccache
         uses: actions/cache@v4
         with:
-          path: ~/.cache/ccache
-          key: ccache-${{ hashFiles('Source/**', 'Tests/**', 'CMakeLists.txt') }}
-          restore-keys: ccache-
+          path: ~/Library/Caches/ccache
+          key: ccache-ci-${{ hashFiles('Source/**', 'Tests/**', 'CMakeLists.txt') }}
+          restore-keys: ccache-ci-
 
       - name: Configure
         run: cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_FLAGS="--coverage" -DCMAKE_C_FLAGS="--coverage"
@@ -49,12 +44,14 @@ jobs:
       - name: Build all targets
         run: cmake --build build
 
+      - name: ccache stats
+        run: ccache -s
+
       - name: Run tests
         run: ./build/GainKnobTests_artefacts/Release/GainKnobTests
 
       - name: Generate coverage report
         run: |
-          brew install lcov
           lcov --capture --directory build --output-file coverage.info \
                --ignore-errors inconsistent,format,count
           lcov --remove coverage.info '*/JUCE/*' '*/tests/*' '/usr/*' '*/build/*' '*/Frameworks/*' \
