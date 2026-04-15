@@ -1,5 +1,13 @@
 # GainKnob
 
+<p align="center">
+  <a href="https://github.com/conjius-dp/gain-knob/actions/workflows/tests.yml"><img src="https://github.com/conjius-dp/gain-knob/actions/workflows/tests.yml/badge.svg" alt="Tests"></a>
+  <a href="https://github.com/conjius-dp/gain-knob/actions/workflows/ci.yml"><img src="https://github.com/conjius-dp/gain-knob/actions/workflows/ci.yml/badge.svg" alt="Standalone"></a>
+  <a href="https://github.com/conjius-dp/gain-knob/actions/workflows/vst3.yml"><img src="https://github.com/conjius-dp/gain-knob/actions/workflows/vst3.yml/badge.svg" alt="VST3"></a>
+  <a href="https://github.com/conjius-dp/gain-knob/releases/latest"><img src="https://img.shields.io/github/v/release/conjius-dp/gain-knob?label=stable" alt="Stable"></a>
+  <a href="https://github.com/conjius-dp/gain-knob/releases"><img src="https://img.shields.io/github/v/release/conjius-dp/gain-knob?include_prereleases&label=nightly" alt="Nightly"></a>
+</p>
+
 A simple audio plugin with a single gain knob ranging from -inf (silence) to +24 dB. The gain parameter is fully automatable, so DAWs can map it to any MIDI controller.
 
 **Formats:** VST3, AU, Standalone
