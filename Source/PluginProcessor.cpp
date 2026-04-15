@@ -1,4 +1,4 @@
-// GainKnob audio processor
+// GainKnob audio processor — conjius-dp
 #include "PluginProcessor.h"
 #ifndef GAINKNOB_TESTS
 #include "PluginEditor.h"
