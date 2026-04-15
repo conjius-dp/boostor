@@ -1,7 +1,7 @@
 # GainKnob
 
 <p align="center">
-  <img src="Assets/gain-knob.png" width="240" alt="GainKnob">
+  <img src="Assets/gain-knob-v2.png" width="240" alt="GainKnob">
 </p>
 
 <p align="center">
