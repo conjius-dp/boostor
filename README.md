@@ -1,6 +1,10 @@
 # GainKnob
 
 <p align="center">
+  <img src="Assets/gain-knob.png" width="300" alt="GainKnob">
+</p>
+
+<p align="center">
   <a href="https://github.com/conjius-dp/gain-knob/releases/latest"><img src="https://img.shields.io/github/v/release/conjius-dp/gain-knob?label=stable" alt="Stable"></a>
   <a href="https://github.com/conjius-dp/gain-knob/releases"><img src="https://img.shields.io/github/v/release/conjius-dp/gain-knob?include_prereleases&label=nightly" alt="Nightly"></a>
 </p>
