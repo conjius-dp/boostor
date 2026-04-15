@@ -10,8 +10,33 @@ permissions:
   contents: write
 
 jobs:
-  release:
+  check-changes:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    outputs:
+      plugin_changed: ${{ steps.filter.outputs.plugin_changed }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Check for plugin code changes
+        id: filter
+        run: |
+          CHANGED=$(git diff --name-only HEAD~1 HEAD -- Source/ Tests/ Assets/ CMakeLists.txt)
+          if [ -n "$CHANGED" ]; then
+            echo "plugin_changed=true" >> "$GITHUB_OUTPUT"
+            echo "Plugin files changed:"
+            echo "$CHANGED"
+          else
+            echo "plugin_changed=false" >> "$GITHUB_OUTPUT"
+            echo "No plugin files changed, skipping release"
+          fi
+
+  release:
+    needs: check-changes
+    if: needs.check-changes.outputs.plugin_changed == 'true'
     runs-on: macos-latest
 
     steps:
