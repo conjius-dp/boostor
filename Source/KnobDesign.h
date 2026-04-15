@@ -236,28 +236,40 @@ public:
             // ── Fixed pill dimensions ──
             // Pill layout: [padLeft | minus zone | gap | value zone | " dB" | padRight]
             // Minus is pinned to left edge; " dB" is pinned to right edge; value sits between.
-            auto baseFont = getRegularFont(baseHeight);
-            juce::String dbSuffix = " dB";
-            float dbW = baseFont.getStringWidthFloat(dbSuffix);
 
-            // Use same font sizes/weights as knob marker for −∞
-            // Knob marker uses: minus = bold @ markerFontSize, ∞ = regular @ infFontSize
-            // markerFontSize = fontSize * 0.85, infFontSize = fontSize * 1.8
-            // Ratio: minus is 0.85x base, inf is 1.8x base
-            float pillMinusFontSize = baseHeight * 0.85f;
-            float pillInfFontSize = baseHeight * 1.8f;
+            // Use exact same font sizes as knob marker labels
+            // Knob: diameter = windowSize * 0.42, fontSize = diameter * 0.18
+            //        markerFontSize = fontSize * 0.85, infFontSize = fontSize * 1.8
+            auto* slider = dynamic_cast<juce::Slider*>(label.getParentComponent());
+            auto* editor = slider ? slider->getParentComponent() : nullptr;
+            float windowSize = editor
+                ? juce::jmin(static_cast<float>(editor->getWidth()),
+                             static_cast<float>(editor->getHeight()))
+                : 450.0f;
+            float knobDiameter = windowSize * 0.42f;
+            float knobFontSize = knobDiameter * KnobDesign::labelFontScale;
+            float pillMinusFontSize = knobFontSize * 0.85f;
+            float pillInfFontSize = knobFontSize * 1.8f;
             auto pillMinusFont = getBoldFont(pillMinusFontSize);
             auto pillInfFont = getRegularFont(pillInfFontSize);
+
+            // dB suffix uses bold (same weight as +24 marker)
+            auto dbFont = getBoldFont(baseHeight);
+            juce::String dbSuffix = " dB";
+            float dbW = dbFont.getStringWidthFloat(dbSuffix);
+            auto baseFont = getRegularFont(baseHeight);
 
             // Measure minus sign width (static left zone)
             auto minusStr = juce::String(juce::CharPointer_UTF8("\xe2\x88\x92"));
             float minusW = pillMinusFont.getStringWidthFloat(minusStr);
             float minusGap = baseHeight * 0.15f;  // gap between minus and value
 
-            // Measure widest possible value area (∞ text or "+24.0")
+            // Measure widest possible value area
+            // Widest numeric: "99.9" (digits only, sign is separate)
+            // Widest symbol: ∞ at knob marker size
             auto infStr = juce::String(juce::CharPointer_UTF8("\xe2\x88\x9e"));
             float infW = pillInfFont.getStringWidthFloat(infStr);
-            float numW = baseFont.getStringWidthFloat("+24.0");
+            float numW = baseFont.getStringWidthFloat("99.9");
             float valueZoneW = juce::jmax(infW, numW);
 
             float pillH = baseHeight * 1.4f;
@@ -268,7 +280,7 @@ public:
             // Centre the pill horizontally in the label
             float labelW = static_cast<float>(label.getWidth());
             float pillX = (labelW - pillW) * 0.5f;
-            float pillY = (static_cast<float>(label.getHeight()) - pillH) * 0.5f + 5.0f;
+            float pillY = (static_cast<float>(label.getHeight()) - pillH) * 0.5f + 8.0f;
 
             auto pillBounds = juce::Rectangle<float>(pillX, pillY, pillW, pillH);
 
@@ -279,9 +291,9 @@ public:
             g.setColour(KnobDesign::bgColour);
             float centreY = pillBounds.getCentreY();
 
-            // ── Fixed right zone: " dB" always at same position ──
+            // ── Fixed right zone: " dB" always at same position, bold weight ──
             float dbX = pillBounds.getRight() - padRight - dbW;
-            g.setFont(baseFont);
+            g.setFont(dbFont);
             g.drawText(dbSuffix,
                        juce::Rectangle<float>(dbX, centreY - baseHeight * 0.5f,
                                               dbW, baseHeight),
@@ -302,10 +314,11 @@ public:
                                                   minusW, pillMinusFontSize),
                            juce::Justification::centred, false);
 
-                // Draw ∞ — regular weight, same as knob marker
+                // Draw ∞ — regular weight, same as knob marker, nudged up to centre in pill
+                float infNudgeY = windowSize * -0.004f;
                 g.setFont(pillInfFont);
                 g.drawText(infStr,
-                           juce::Rectangle<float>(valueLeft, centreY - pillInfFontSize * 0.5f,
+                           juce::Rectangle<float>(valueLeft, centreY - pillInfFontSize * 0.5f + infNudgeY,
                                                   valueRight - valueLeft, pillInfFontSize),
                            juce::Justification::centredLeft, false);
             }
@@ -339,8 +352,8 @@ public:
                                juce::Justification::centred, false);
                 }
 
-                // Draw value digits left-aligned in the value zone
-                g.setFont(baseFont);
+                // Draw value digits left-aligned in the value zone — bold, same as dB
+                g.setFont(dbFont);
                 g.drawText(digits,
                            juce::Rectangle<float>(valueLeft, centreY - baseHeight * 0.5f,
                                                   valueRight - valueLeft, baseHeight),
