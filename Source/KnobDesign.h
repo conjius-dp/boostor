@@ -240,16 +240,23 @@ public:
             juce::String dbSuffix = " dB";
             float dbW = baseFont.getStringWidthFloat(dbSuffix);
 
+            // Use same font sizes/weights as knob marker for −∞
+            // Knob marker uses: minus = bold @ markerFontSize, ∞ = regular @ infFontSize
+            // markerFontSize = fontSize * 0.85, infFontSize = fontSize * 1.8
+            // Ratio: minus is 0.85x base, inf is 1.8x base
+            float pillMinusFontSize = baseHeight * 0.85f;
+            float pillInfFontSize = baseHeight * 1.8f;
+            auto pillMinusFont = getBoldFont(pillMinusFontSize);
+            auto pillInfFont = getRegularFont(pillInfFontSize);
+
             // Measure minus sign width (static left zone)
             auto minusStr = juce::String(juce::CharPointer_UTF8("\xe2\x88\x92"));
-            float minusW = baseFont.getStringWidthFloat(minusStr);
+            float minusW = pillMinusFont.getStringWidthFloat(minusStr);
             float minusGap = baseHeight * 0.15f;  // gap between minus and value
 
-            // Measure widest possible value area (∞ path or "+24.0")
-            // ∞ is drawn as a custom path for full stroke control
-            float infSymW = baseHeight * 1.2f;   // width of the ∞ path
-            float infSymH = baseHeight * 0.55f;  // height of the ∞ path
-            float infW = infSymW;
+            // Measure widest possible value area (∞ text or "+24.0")
+            auto infStr = juce::String(juce::CharPointer_UTF8("\xe2\x88\x9e"));
+            float infW = pillInfFont.getStringWidthFloat(infStr);
             float numW = baseFont.getStringWidthFloat("+24.0");
             float valueZoneW = juce::jmax(infW, numW);
 
@@ -288,65 +295,19 @@ public:
 
             if (hasInfinity)
             {
-                // Draw minus pinned to left
-                g.setFont(baseFont);
+                // Draw minus pinned to left — bold, same as knob marker
+                g.setFont(pillMinusFont);
                 g.drawText(minusStr,
-                           juce::Rectangle<float>(minusX, centreY - baseHeight * 0.5f,
-                                                  minusW, baseHeight),
+                           juce::Rectangle<float>(minusX, centreY - pillMinusFontSize * 0.5f,
+                                                  minusW, pillMinusFontSize),
                            juce::Justification::centred, false);
 
-                // Draw ∞ as a custom path for precise stroke control
-                float infCX = valueLeft + infSymW * 0.5f;
-                float infCY = pillBounds.getCentreY();
-                float hw = infSymW * 0.5f;  // half-width
-                float hh = infSymH * 0.5f;  // half-height
-
-                juce::Path infPath;
-                // Each lobe is a near-circle using cubic bezier magic number
-                float k = 0.5523f;  // cubic bezier circle approximation constant
-                float lr = hw * 0.5f;  // lobe radius (each lobe is a circle)
-                float lrx = lr;        // horizontal radius
-                float lry = hh;        // vertical radius = half-height
-
-                // Left lobe centre
-                float lcx = infCX - lrx;
-
-                // Left lobe: top half (from centre crossing → left peak → back)
-                infPath.startNewSubPath(infCX, infCY);
-                infPath.cubicTo(infCX - lrx * k, infCY - lry * k * 2.0f,
-                                lcx + lrx * k,   infCY - lry,
-                                lcx,              infCY - lry);
-                infPath.cubicTo(lcx - lrx * k,   infCY - lry,
-                                infCX - hw,       infCY - lry * k,
-                                infCX - hw,       infCY);
-                // Left lobe: bottom half
-                infPath.cubicTo(infCX - hw,       infCY + lry * k,
-                                lcx - lrx * k,   infCY + lry,
-                                lcx,              infCY + lry);
-                infPath.cubicTo(lcx + lrx * k,   infCY + lry,
-                                infCX - lrx * k, infCY + lry * k * 2.0f,
-                                infCX,            infCY);
-
-                // Right lobe centre
-                float rcx = infCX + lrx;
-
-                // Right lobe: bottom half (continues from centre)
-                infPath.cubicTo(infCX + lrx * k, infCY + lry * k * 2.0f,
-                                rcx - lrx * k,   infCY + lry,
-                                rcx,              infCY + lry);
-                infPath.cubicTo(rcx + lrx * k,   infCY + lry,
-                                infCX + hw,       infCY + lry * k,
-                                infCX + hw,       infCY);
-                // Right lobe: top half
-                infPath.cubicTo(infCX + hw,       infCY - lry * k,
-                                rcx + lrx * k,   infCY - lry,
-                                rcx,              infCY - lry);
-                infPath.cubicTo(rcx - lrx * k,   infCY - lry,
-                                infCX + lrx * k, infCY - lry * k * 2.0f,
-                                infCX,            infCY);
-
-                float strokeW = baseHeight * 0.08f;
-                g.strokePath(infPath, juce::PathStrokeType(strokeW, juce::PathStrokeType::curved));
+                // Draw ∞ — regular weight, same as knob marker
+                g.setFont(pillInfFont);
+                g.drawText(infStr,
+                           juce::Rectangle<float>(valueLeft, centreY - pillInfFontSize * 0.5f,
+                                                  valueRight - valueLeft, pillInfFontSize),
+                           juce::Justification::centredLeft, false);
             }
             else
             {
@@ -361,20 +322,20 @@ public:
 
                 if (isNegative)
                 {
-                    // Draw minus pinned to left
-                    g.setFont(baseFont);
+                    // Draw minus pinned to left — bold, same as knob marker
+                    g.setFont(pillMinusFont);
                     g.drawText(minusStr,
-                               juce::Rectangle<float>(minusX, centreY - baseHeight * 0.5f,
-                                                      minusW, baseHeight),
+                               juce::Rectangle<float>(minusX, centreY - pillMinusFontSize * 0.5f,
+                                                      minusW, pillMinusFontSize),
                                juce::Justification::centred, false);
                 }
                 else if (isPositive)
                 {
-                    // Draw plus pinned to left
-                    g.setFont(baseFont);
+                    // Draw plus pinned to left — bold, same weight as minus
+                    g.setFont(pillMinusFont);
                     g.drawText("+",
-                               juce::Rectangle<float>(minusX, centreY - baseHeight * 0.5f,
-                                                      minusW, baseHeight),
+                               juce::Rectangle<float>(minusX, centreY - pillMinusFontSize * 0.5f,
+                                                      minusW, pillMinusFontSize),
                                juce::Justification::centred, false);
                 }
 
