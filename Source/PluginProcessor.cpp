@@ -1,10 +1,10 @@
-// GainKnob audio processor — conjius-dp
+// Boostor audio processor — conjius-dp
 #include "PluginProcessor.h"
-#ifndef GAINKNOB_TESTS
+#ifndef BOOSTOR_TESTS
 #include "PluginEditor.h"
 #endif
 
-GainKnobAudioProcessor::GainKnobAudioProcessor()
+BoostorAudioProcessor::BoostorAudioProcessor()
     : AudioProcessor(BusesProperties()
                          .withInput("Input", juce::AudioChannelSet::stereo(), true)
                          .withOutput("Output", juce::AudioChannelSet::stereo(), true)),
@@ -14,7 +14,7 @@ GainKnobAudioProcessor::GainKnobAudioProcessor()
 }
 
 juce::AudioProcessorValueTreeState::ParameterLayout
-GainKnobAudioProcessor::createParameterLayout()
+BoostorAudioProcessor::createParameterLayout()
 {
     std::vector<std::unique_ptr<juce::RangedAudioParameter>> params;
 
@@ -29,7 +29,7 @@ GainKnobAudioProcessor::createParameterLayout()
     return { params.begin(), params.end() };
 }
 
-void GainKnobAudioProcessor::prepareToPlay(double sampleRate, int /*samplesPerBlock*/)
+void BoostorAudioProcessor::prepareToPlay(double sampleRate, int /*samplesPerBlock*/)
 {
     smoothedGain.reset(sampleRate, 0.02);
     float gainDB = gainParam->load();
@@ -37,9 +37,9 @@ void GainKnobAudioProcessor::prepareToPlay(double sampleRate, int /*samplesPerBl
         juce::Decibels::decibelsToGain(gainDB, -100.0f));
 }
 
-void GainKnobAudioProcessor::releaseResources() {}
+void BoostorAudioProcessor::releaseResources() {}
 
-bool GainKnobAudioProcessor::isBusesLayoutSupported(const BusesLayout& layouts) const
+bool BoostorAudioProcessor::isBusesLayoutSupported(const BusesLayout& layouts) const
 {
     if (layouts.getMainOutputChannelSet() != juce::AudioChannelSet::mono()
         && layouts.getMainOutputChannelSet() != juce::AudioChannelSet::stereo())
@@ -48,7 +48,7 @@ bool GainKnobAudioProcessor::isBusesLayoutSupported(const BusesLayout& layouts) 
     return layouts.getMainOutputChannelSet() == layouts.getMainInputChannelSet();
 }
 
-void GainKnobAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
+void BoostorAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
                                            juce::MidiBuffer& /*midiMessages*/)
 {
     const auto startTicks = juce::Time::getHighResolutionTicks();
@@ -117,30 +117,30 @@ void GainKnobAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
         std::memory_order_relaxed);
 }
 
-juce::AudioProcessorEditor* GainKnobAudioProcessor::createEditor()
+juce::AudioProcessorEditor* BoostorAudioProcessor::createEditor()
 {
-#ifndef GAINKNOB_TESTS
-    return new GainKnobAudioProcessorEditor(*this);
+#ifndef BOOSTOR_TESTS
+    return new BoostorAudioProcessorEditor(*this);
 #else
     return nullptr;
 #endif
 }
 
-bool GainKnobAudioProcessor::hasEditor() const { return true; }
+bool BoostorAudioProcessor::hasEditor() const { return true; }
 
-const juce::String GainKnobAudioProcessor::getName() const { return "GainKnob"; }
-bool GainKnobAudioProcessor::acceptsMidi() const { return true; }
-bool GainKnobAudioProcessor::producesMidi() const { return false; }
-bool GainKnobAudioProcessor::isMidiEffect() const { return false; }
-double GainKnobAudioProcessor::getTailLengthSeconds() const { return 0.0; }
+const juce::String BoostorAudioProcessor::getName() const { return "boostor"; }
+bool BoostorAudioProcessor::acceptsMidi() const { return true; }
+bool BoostorAudioProcessor::producesMidi() const { return false; }
+bool BoostorAudioProcessor::isMidiEffect() const { return false; }
+double BoostorAudioProcessor::getTailLengthSeconds() const { return 0.0; }
 
-int GainKnobAudioProcessor::getNumPrograms() { return 1; }
-int GainKnobAudioProcessor::getCurrentProgram() { return 0; }
-void GainKnobAudioProcessor::setCurrentProgram(int /*index*/) {}
-const juce::String GainKnobAudioProcessor::getProgramName(int /*index*/) { return {}; }
-void GainKnobAudioProcessor::changeProgramName(int /*index*/, const juce::String& /*newName*/) {}
+int BoostorAudioProcessor::getNumPrograms() { return 1; }
+int BoostorAudioProcessor::getCurrentProgram() { return 0; }
+void BoostorAudioProcessor::setCurrentProgram(int /*index*/) {}
+const juce::String BoostorAudioProcessor::getProgramName(int /*index*/) { return {}; }
+void BoostorAudioProcessor::changeProgramName(int /*index*/, const juce::String& /*newName*/) {}
 
-void GainKnobAudioProcessor::getStateInformation(juce::MemoryBlock& destData)
+void BoostorAudioProcessor::getStateInformation(juce::MemoryBlock& destData)
 {
     auto state = apvts.copyState();
     std::unique_ptr<juce::XmlElement> xml(state.createXml());
@@ -149,7 +149,7 @@ void GainKnobAudioProcessor::getStateInformation(juce::MemoryBlock& destData)
     copyXmlToBinary(*xml, destData);
 }
 
-void GainKnobAudioProcessor::setStateInformation(const void* data, int sizeInBytes)
+void BoostorAudioProcessor::setStateInformation(const void* data, int sizeInBytes)
 {
     std::unique_ptr<juce::XmlElement> xml(getXmlFromBinary(data, sizeInBytes));
     if (xml != nullptr && xml->hasTagName(apvts.state.getType()))
@@ -162,5 +162,5 @@ void GainKnobAudioProcessor::setStateInformation(const void* data, int sizeInByt
 
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {
-    return new GainKnobAudioProcessor();
+    return new BoostorAudioProcessor();
 }

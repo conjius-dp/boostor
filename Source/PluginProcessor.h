@@ -3,11 +3,11 @@
 #include <juce_dsp/juce_dsp.h>
 #include "KnobDesign.h"
 
-class GainKnobAudioProcessor : public juce::AudioProcessor
+class BoostorAudioProcessor : public juce::AudioProcessor
 {
 public:
-    GainKnobAudioProcessor();
-    ~GainKnobAudioProcessor() override = default;
+    BoostorAudioProcessor();
+    ~BoostorAudioProcessor() override = default;
 
     void prepareToPlay(double sampleRate, int samplesPerBlock) override;
     void releaseResources() override;
@@ -47,5 +47,5 @@ private:
 
     static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(GainKnobAudioProcessor)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(BoostorAudioProcessor)
 };

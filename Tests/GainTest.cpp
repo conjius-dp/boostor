@@ -7,20 +7,20 @@
 class GainParameterTest : public juce::UnitTest
 {
 public:
-    GainParameterTest() : juce::UnitTest("Gain Parameter Tests", "GainKnob") {}
+    GainParameterTest() : juce::UnitTest("Gain Parameter Tests", "Boostor") {}
 
     void runTest() override
     {
         beginTest("Parameter exists with correct ID");
         {
-            GainKnobAudioProcessor processor;
+            BoostorAudioProcessor processor;
             auto* param = processor.getAPVTS().getParameter("gain");
             expect(param != nullptr, "gain parameter should exist");
         }
 
         beginTest("Parameter range is -100 to +24 dB");
         {
-            GainKnobAudioProcessor processor;
+            BoostorAudioProcessor processor;
             auto* param = processor.getAPVTS().getParameter("gain");
             auto range = param->getNormalisableRange();
             expectEquals(range.start, -100.0f, "min should be -100");
@@ -29,7 +29,7 @@ public:
 
         beginTest("Default value is 0 dB (unity gain)");
         {
-            GainKnobAudioProcessor processor;
+            BoostorAudioProcessor processor;
             auto* param = processor.getAPVTS().getParameter("gain");
             float defaultNorm = param->getDefaultValue();
             float defaultDenorm = param->convertFrom0to1(defaultNorm);
@@ -39,7 +39,7 @@ public:
 
         beginTest("Unity gain (0 dB) passes audio unchanged");
         {
-            GainKnobAudioProcessor processor;
+            BoostorAudioProcessor processor;
             processor.getAPVTS().getParameterAsValue("gain").setValue(0.0f);
 
             constexpr int numSamples = 512;
@@ -60,7 +60,7 @@ public:
 
         beginTest("+6 dB doubles the amplitude");
         {
-            GainKnobAudioProcessor processor;
+            BoostorAudioProcessor processor;
             processor.getAPVTS().getParameterAsValue("gain").setValue(6.0f);
 
             constexpr int numSamples = 512;
@@ -82,7 +82,7 @@ public:
 
         beginTest("-100 dB (min) silences the signal");
         {
-            GainKnobAudioProcessor processor;
+            BoostorAudioProcessor processor;
             processor.getAPVTS().getParameterAsValue("gain").setValue(-100.0f);
 
             constexpr int numSamples = 512;
@@ -106,13 +106,13 @@ public:
             juce::MemoryBlock stateData;
 
             {
-                GainKnobAudioProcessor processor;
+                BoostorAudioProcessor processor;
                 processor.getAPVTS().getParameterAsValue("gain").setValue(12.0f);
                 processor.getStateInformation(stateData);
             }
 
             {
-                GainKnobAudioProcessor processor;
+                BoostorAudioProcessor processor;
                 processor.setStateInformation(stateData.getData(),
                                               static_cast<int>(stateData.getSize()));
                 auto* param = processor.getAPVTS().getParameter("gain");
@@ -124,7 +124,7 @@ public:
 
         beginTest("Stereo bus layout is supported");
         {
-            GainKnobAudioProcessor processor;
+            BoostorAudioProcessor processor;
             auto layout = juce::AudioProcessor::BusesLayout();
             layout.inputBuses.add(juce::AudioChannelSet::stereo());
             layout.outputBuses.add(juce::AudioChannelSet::stereo());
@@ -134,7 +134,7 @@ public:
 
         beginTest("Unity gain bypass leaves buffer untouched");
         {
-            GainKnobAudioProcessor processor;
+            BoostorAudioProcessor processor;
             processor.getAPVTS().getParameterAsValue("gain").setValue(0.0f);
 
             constexpr int numSamples = 512;
@@ -164,7 +164,7 @@ public:
 
         beginTest("Silence at -100 dB clears buffer efficiently");
         {
-            GainKnobAudioProcessor processor;
+            BoostorAudioProcessor processor;
             processor.getAPVTS().getParameterAsValue("gain").setValue(-100.0f);
 
             constexpr int numSamples = 512;
@@ -191,7 +191,7 @@ public:
 
         beginTest("SIMD path produces correct gain for +12 dB");
         {
-            GainKnobAudioProcessor processor;
+            BoostorAudioProcessor processor;
             processor.getAPVTS().getParameterAsValue("gain").setValue(12.0f);
 
             constexpr int numSamples = 1024;
@@ -219,7 +219,7 @@ public:
 
         beginTest("Process latency is measured and non-negative");
         {
-            GainKnobAudioProcessor processor;
+            BoostorAudioProcessor processor;
             processor.getAPVTS().getParameterAsValue("gain").setValue(6.0f);
 
             constexpr int numSamples = 512;
@@ -239,7 +239,7 @@ public:
 
         beginTest("Process latency updates each block");
         {
-            GainKnobAudioProcessor processor;
+            BoostorAudioProcessor processor;
             processor.getAPVTS().getParameterAsValue("gain").setValue(3.0f);
 
             constexpr int numSamples = 256;
@@ -271,7 +271,7 @@ static GainParameterTest gainParameterTest;
 class KnobDesignTest : public juce::UnitTest
 {
 public:
-    KnobDesignTest() : juce::UnitTest("Knob Design Tests", "GainKnob") {}
+    KnobDesignTest() : juce::UnitTest("Knob Design Tests", "Boostor") {}
 
     void runTest() override
     {
@@ -401,7 +401,7 @@ static KnobDesignTest knobDesignTest;
 int main()
 {
     juce::UnitTestRunner runner;
-    runner.runTestsInCategory("GainKnob");
+    runner.runTestsInCategory("Boostor");
 
     int failures = 0;
     for (int i = 0; i < runner.getNumResults(); ++i)

@@ -1,6 +1,6 @@
 #include "PluginEditor.h"
 
-GainKnobAudioProcessorEditor::GainKnobAudioProcessorEditor(GainKnobAudioProcessor& p)
+BoostorAudioProcessorEditor::BoostorAudioProcessorEditor(BoostorAudioProcessor& p)
     : AudioProcessorEditor(&p), processorRef(p)
 {
     conjusLAF.loadFonts(BinaryData::InconsolataBold_ttf,
@@ -55,20 +55,20 @@ GainKnobAudioProcessorEditor::GainKnobAudioProcessorEditor(GainKnobAudioProcesso
     startTimerHz(30);
 }
 
-GainKnobAudioProcessorEditor::~GainKnobAudioProcessorEditor()
+BoostorAudioProcessorEditor::~BoostorAudioProcessorEditor()
 {
     setLookAndFeel(nullptr);
     stopTimer();
 }
 
-void GainKnobAudioProcessorEditor::timerCallback()
+void BoostorAudioProcessorEditor::timerCallback()
 {
     float latencyMs = processorRef.getLastProcessLatencyMs();
     latencyLabel.setText("Latency: " + juce::String(latencyMs, 3) + "ms",
                          juce::dontSendNotification);
 }
 
-void GainKnobAudioProcessorEditor::paint(juce::Graphics& g)
+void BoostorAudioProcessorEditor::paint(juce::Graphics& g)
 {
     g.fillAll(KnobDesign::bgColour);
 
@@ -84,7 +84,7 @@ void GainKnobAudioProcessorEditor::paint(juce::Graphics& g)
     }
 }
 
-void GainKnobAudioProcessorEditor::resized()
+void BoostorAudioProcessorEditor::resized()
 {
     // Persist editor size for DAW state save/restore
     processorRef.editorWidth.store(getWidth());

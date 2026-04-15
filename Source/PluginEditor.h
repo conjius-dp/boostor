@@ -3,12 +3,12 @@
 #include "KnobDesign.h"
 #include "BinaryData.h"
 
-class GainKnobAudioProcessorEditor : public juce::AudioProcessorEditor,
+class BoostorAudioProcessorEditor : public juce::AudioProcessorEditor,
                                      private juce::Timer
 {
 public:
-    explicit GainKnobAudioProcessorEditor(GainKnobAudioProcessor&);
-    ~GainKnobAudioProcessorEditor() override;
+    explicit BoostorAudioProcessorEditor(BoostorAudioProcessor&);
+    ~BoostorAudioProcessorEditor() override;
 
     void paint(juce::Graphics&) override;
     void resized() override;
@@ -16,7 +16,7 @@ public:
 private:
     void timerCallback() override;
 
-    GainKnobAudioProcessor& processorRef;
+    BoostorAudioProcessor& processorRef;
     ConjusKnobLookAndFeel conjusLAF;
     juce::Slider gainSlider;
     juce::Label gainLabel;
@@ -24,5 +24,5 @@ private:
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> gainAttachment;
     juce::Image logoImage;
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(GainKnobAudioProcessorEditor)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(BoostorAudioProcessorEditor)
 };

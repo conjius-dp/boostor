@@ -1,12 +1,12 @@
-# GainKnob
+# Boostor
 
 <p align="center">
-  <img src="Assets/gain-knob-v2.png" width="240" alt="GainKnob">
+  <img src="Assets/gain-knob-v2.png" width="240" alt="Boostor">
 </p>
 
 <p align="center">
-  <a href="https://github.com/conjius-dp/gain-knob/releases/latest"><img src="https://img.shields.io/github/v/release/conjius-dp/gain-knob?label=stable" alt="Stable"></a>
-  <a href="https://github.com/conjius-dp/gain-knob/releases"><img src="https://img.shields.io/github/v/release/conjius-dp/gain-knob?include_prereleases&label=nightly" alt="Nightly"></a>
+  <a href="https://github.com/conjius-dp/boostor/releases/latest"><img src="https://img.shields.io/github/v/release/conjius-dp/boostor?label=stable" alt="Stable"></a>
+  <a href="https://github.com/conjius-dp/boostor/releases"><img src="https://img.shields.io/github/v/release/conjius-dp/boostor?include_prereleases&label=nightly" alt="Nightly"></a>
 </p>
 
 A simple audio plugin with a single gain knob ranging from -inf (silence) to +24 dB. The gain parameter is fully automatable, so DAWs can map it to any MIDI controller.
@@ -29,8 +29,8 @@ A simple audio plugin with a single gain knob ranging from -inf (silence) to +24
 1. Clone the repository:
 
 ```bash
-git clone https://github.com/conjius-dp/gain-knob.git
-cd gain-knob
+git clone https://github.com/conjius-dp/boostor.git
+cd boostor
 ```
 
 2. Clone JUCE 8.0.12 into the project root:
@@ -56,17 +56,17 @@ cmake --build build
 
 Ninja builds all targets in parallel by default. ccache caches compiled objects so incremental rebuilds after small changes are near-instant.
 
-The built plugins are in `build/GainKnob_artefacts/Release/`:
+The built plugins are in `build/Boostor_artefacts/Release/`:
 
-- `VST3/GainKnob.vst3`
-- `AU/GainKnob.component`
-- `Standalone/GainKnob.app`
+- `VST3/boostor.vst3`
+- `AU/boostor.component`
+- `Standalone/boostor.app`
 
 On macOS, `COPY_PLUGIN_AFTER_BUILD` is enabled so the VST3 and AU are automatically installed to `~/Library/Audio/Plug-Ins/`.
 
 ## Running Tests
 
 ```bash
-cmake --build build --target GainKnobTests
-./build/GainKnobTests_artefacts/Release/GainKnobTests
+cmake --build build --target BoostorTests
+./build/BoostorTests_artefacts/Release/BoostorTests
 ```
