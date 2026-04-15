@@ -155,8 +155,8 @@ void BoostorAudioProcessorEditor::startSnapAnimation(juce::Slider& slider, Slide
     if (param == nullptr) return;
 
     anim.currentValue = slider.getValue();
-    anim.targetValue = static_cast<double>(param->getDefaultValue())
-                       * (slider.getMaximum() - slider.getMinimum()) + slider.getMinimum();
+    auto range = juce::NormalisableRange<float>(-100.0f, 24.0f, 0.1f, 3.25f);
+    anim.targetValue = static_cast<double>(range.convertFrom0to1(param->getDefaultValue()));
     anim.active = true;
 }
 
