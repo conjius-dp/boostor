@@ -1,6 +1,7 @@
 #pragma once
 #include <juce_audio_processors/juce_audio_processors.h>
 #include <juce_dsp/juce_dsp.h>
+#include "KnobDesign.h"
 
 class GainKnobAudioProcessor : public juce::AudioProcessor
 {
@@ -33,6 +34,10 @@ public:
 
     juce::AudioProcessorValueTreeState& getAPVTS() { return apvts; }
     float getLastProcessLatencyMs() const { return lastProcessLatencyMs.load(std::memory_order_relaxed); }
+
+    // Editor size persistence
+    std::atomic<int> editorWidth  { KnobDesign::defaultSize };
+    std::atomic<int> editorHeight { KnobDesign::defaultSize };
 
 private:
     juce::AudioProcessorValueTreeState apvts;

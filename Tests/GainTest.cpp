@@ -1,6 +1,8 @@
 #include <juce_audio_processors/juce_audio_processors.h>
 #include <juce_dsp/juce_dsp.h>
+#include <juce_gui_basics/juce_gui_basics.h>
 #include "../Source/PluginProcessor.h"
+#include "../Source/KnobDesign.h"
 
 class GainParameterTest : public juce::UnitTest
 {
@@ -264,6 +266,137 @@ public:
 };
 
 static GainParameterTest gainParameterTest;
+
+// ── UI Design Tests ──
+class KnobDesignTest : public juce::UnitTest
+{
+public:
+    KnobDesignTest() : juce::UnitTest("Knob Design Tests") {}
+
+    void runTest() override
+    {
+        beginTest("Background colour is #111111");
+        {
+            expect(KnobDesign::bgColour == juce::Colour(0xff111111),
+                   "bg should be #111");
+        }
+
+        beginTest("Accent colour is #d48300");
+        {
+            expect(KnobDesign::accentColour == juce::Colour(0xffd48300),
+                   "accent should be #d48300");
+        }
+
+        beginTest("Knob stroke fraction is proportional");
+        {
+            expect(KnobDesign::knobStrokeFrac > 0.0f && KnobDesign::knobStrokeFrac < 0.1f,
+                   "circle stroke fraction should be reasonable");
+            // At 150px diameter, stroke should be ~5px
+            float stroke150 = 150.0f * KnobDesign::knobStrokeFrac;
+            expectWithinAbsoluteError(stroke150, 5.0f, 0.5f,
+                                      "stroke at 150px diameter should be ~5px");
+        }
+
+        beginTest("Indicator stroke fraction is proportional");
+        {
+            expect(KnobDesign::indicatorWidthFrac > 0.0f && KnobDesign::indicatorWidthFrac < 0.1f,
+                   "indicator stroke fraction should be reasonable");
+            float ind150 = 150.0f * KnobDesign::indicatorWidthFrac;
+            expectWithinAbsoluteError(ind150, 6.0f, 0.5f,
+                                      "indicator at 150px diameter should be ~6px");
+        }
+
+        beginTest("Tick stroke fraction is proportional");
+        {
+            expect(KnobDesign::tickStrokeFrac > 0.0f && KnobDesign::tickStrokeFrac < 0.1f,
+                   "tick stroke fraction should be reasonable");
+            float tick150 = 150.0f * KnobDesign::tickStrokeFrac;
+            expectWithinAbsoluteError(tick150, 5.0f, 0.5f,
+                                      "tick at 150px diameter should be ~5px");
+        }
+
+        beginTest("Rotation arc is 270 degrees (-135 to +135)");
+        {
+            float arc = KnobDesign::rotationEndAngle - KnobDesign::rotationStartAngle;
+            expectEquals(arc, 270.0f, "total arc should be 270 degrees");
+        }
+
+        beginTest("normToAngleRad returns -135deg at 0.0");
+        {
+            float angle = KnobDesign::normToAngleRad(0.0f);
+            float expected = juce::degreesToRadians(-135.0f);
+            expectWithinAbsoluteError(angle, expected, 0.001f,
+                                      "angle at 0 should be -135 deg");
+        }
+
+        beginTest("normToAngleRad returns +135deg at 1.0");
+        {
+            float angle = KnobDesign::normToAngleRad(1.0f);
+            float expected = juce::degreesToRadians(135.0f);
+            expectWithinAbsoluteError(angle, expected, 0.001f,
+                                      "angle at 1 should be +135 deg");
+        }
+
+        beginTest("normToAngleRad returns 0deg (12 o'clock) at 0.5");
+        {
+            float angle = KnobDesign::normToAngleRad(0.5f);
+            expectWithinAbsoluteError(angle, 0.0f, 0.001f,
+                                      "angle at 0.5 should be 0 (12 o'clock)");
+        }
+
+        beginTest("Default window size is 450x450");
+        {
+            expectEquals(KnobDesign::defaultSize, 450,
+                         "default size should be 450");
+        }
+
+        beginTest("Min window size is 200");
+        {
+            expectEquals(KnobDesign::minSize, 200,
+                         "min size should be 200");
+        }
+
+        beginTest("Max window size is 800");
+        {
+            expectEquals(KnobDesign::maxSize, 800,
+                         "max size should be 800");
+        }
+
+        beginTest("ConjusKnobLookAndFeel text box colours use accent");
+        {
+            ConjusKnobLookAndFeel laf;
+            auto textCol = laf.findColour(juce::Slider::textBoxTextColourId);
+            expect(textCol == KnobDesign::accentColour,
+                   "text box text should be accent colour");
+            auto bgCol = laf.findColour(juce::Slider::textBoxBackgroundColourId);
+            expect(bgCol == juce::Colours::transparentBlack,
+                   "text box bg should be transparent");
+            auto outlineCol = laf.findColour(juce::Slider::textBoxOutlineColourId);
+            expect(outlineCol == juce::Colours::transparentBlack,
+                   "text box outline should be transparent");
+        }
+
+        beginTest("ConjusKnobLookAndFeel label colour uses accent");
+        {
+            ConjusKnobLookAndFeel laf;
+            auto col = laf.findColour(juce::Label::textColourId);
+            expect(col == KnobDesign::accentColour,
+                   "label text should be accent colour");
+        }
+
+        beginTest("Indicator line spans inner to outer radius fractions");
+        {
+            expect(KnobDesign::indicatorStart < KnobDesign::indicatorEnd,
+                   "indicator start should be less than end");
+            expect(KnobDesign::indicatorStart > 0.0f && KnobDesign::indicatorStart < 1.0f,
+                   "indicator start should be between 0 and 1");
+            expect(KnobDesign::indicatorEnd > 0.0f && KnobDesign::indicatorEnd < 1.0f,
+                   "indicator end should be between 0 and 1");
+        }
+    }
+};
+
+static KnobDesignTest knobDesignTest;
 
 int main()
 {

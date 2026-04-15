@@ -20,7 +20,7 @@ GainKnobAudioProcessor::createParameterLayout()
     params.push_back(std::make_unique<juce::AudioParameterFloat>(
         juce::ParameterID{"gain", 1},
         "Gain",
-        juce::NormalisableRange<float>(-100.0f, 24.0f, 0.1f, 3.0f),
+        juce::NormalisableRange<float>(-100.0f, 24.0f, 0.1f, 3.25f),
         0.0f,
         juce::AudioParameterFloatAttributes()
             .withLabel("dB")));
@@ -143,6 +143,8 @@ void GainKnobAudioProcessor::getStateInformation(juce::MemoryBlock& destData)
 {
     auto state = apvts.copyState();
     std::unique_ptr<juce::XmlElement> xml(state.createXml());
+    xml->setAttribute("editorWidth", editorWidth.load());
+    xml->setAttribute("editorHeight", editorHeight.load());
     copyXmlToBinary(*xml, destData);
 }
 
@@ -150,7 +152,11 @@ void GainKnobAudioProcessor::setStateInformation(const void* data, int sizeInByt
 {
     std::unique_ptr<juce::XmlElement> xml(getXmlFromBinary(data, sizeInBytes));
     if (xml != nullptr && xml->hasTagName(apvts.state.getType()))
+    {
         apvts.replaceState(juce::ValueTree::fromXml(*xml));
+        editorWidth.store(xml->getIntAttribute("editorWidth", KnobDesign::defaultSize));
+        editorHeight.store(xml->getIntAttribute("editorHeight", KnobDesign::defaultSize));
+    }
 }
 
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()

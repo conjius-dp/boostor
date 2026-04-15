@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.22)
-project(GainKnob VERSION 0.1.0)
+project(GainKnob VERSION 0.0.1)
 
 add_subdirectory(JUCE)
 
@@ -21,6 +21,12 @@ target_sources(GainKnob
         Source/PluginProcessor.cpp
         Source/PluginEditor.cpp)
 
+juce_add_binary_data(GainKnobBinaryData
+    SOURCES
+        Assets/conjius-avatar-transparent-bg.png
+        Assets/Inconsolata-Bold.ttf
+        Assets/Inconsolata-Regular.ttf)
+
 target_compile_definitions(GainKnob
     PUBLIC
         JUCE_WEB_BROWSER=0
@@ -31,6 +37,7 @@ target_link_libraries(GainKnob
     PRIVATE
         juce::juce_audio_utils
         juce::juce_dsp
+        GainKnobBinaryData
     PUBLIC
         juce::juce_recommended_config_flags
         juce::juce_recommended_lto_flags
@@ -44,7 +51,8 @@ juce_add_console_app(GainKnobTests PRODUCT_NAME "GainKnobTests")
 target_sources(GainKnobTests
     PRIVATE
         Tests/GainTest.cpp
-        Source/PluginProcessor.cpp)
+        Source/PluginProcessor.cpp
+        Source/KnobDesign.h)
 
 target_compile_definitions(GainKnobTests
     PRIVATE
@@ -57,6 +65,7 @@ target_link_libraries(GainKnobTests
     PRIVATE
         juce::juce_audio_utils
         juce::juce_dsp
+        juce::juce_gui_basics
     PUBLIC
         juce::juce_recommended_config_flags
         juce::juce_recommended_warning_flags)
