@@ -50,17 +50,17 @@ jobs:
       - name: Zip Standalone
         run: |
           cd build/Boostor_artefacts/Release/Standalone
-          zip -r "$GITHUB_WORKSPACE/Boostor-macOS-Standalone.zip" Boostor.app
+          zip -r "$GITHUB_WORKSPACE/Boostor-macOS-Standalone.zip" boostor.app
 
       - name: Zip VST3
         run: |
           cd build/Boostor_artefacts/Release/VST3
-          zip -r "$GITHUB_WORKSPACE/Boostor-macOS-VST3.zip" Boostor.vst3
+          zip -r "$GITHUB_WORKSPACE/Boostor-macOS-VST3.zip" boostor.vst3
 
       - name: Zip AU
         run: |
           cd build/Boostor_artefacts/Release/AU
-          zip -r "$GITHUB_WORKSPACE/boostor-macOS-AU.zip" Boostor.component
+          zip -r "$GITHUB_WORKSPACE/boostor-macOS-AU.zip" boostor.component
 
       - name: Upload macOS artifacts
         uses: actions/upload-artifact@v4
@@ -97,7 +97,7 @@ jobs:
       - name: Zip VST3
         shell: pwsh
         run: |
-          Compress-Archive -Path build/Boostor_artefacts/Release/VST3/Boostor.vst3 -DestinationPath Boostor-Windows-VST3.zip
+          Compress-Archive -Path build/Boostor_artefacts/Release/VST3/boostor.vst3 -DestinationPath Boostor-Windows-VST3.zip
 
       - name: Upload Windows artifacts
         uses: actions/upload-artifact@v4
