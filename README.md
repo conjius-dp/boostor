@@ -5,17 +5,17 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/conjius-dp/boostor/actions/workflows/ci.yml"><img src="https://github.com/conjius-dp/boostor/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
-  <a href="https://github.com/conjius-dp/boostor/releases/latest"><img src="https://img.shields.io/github/v/release/conjius-dp/boostor?label=stable&color=brightgreen" alt="Stable"></a>
-  <a href="https://github.com/conjius-dp/boostor/releases"><img src="https://img.shields.io/github/v/release/conjius-dp/boostor?include_prereleases&label=nightly" alt="Nightly"></a>
-</p>
-
-<p align="center">
   <a href="https://github.com/conjius-dp/boostor/releases/latest/download/Boostor-macOS-VST3.zip"><img src="Assets/badges/download-vst3-macos.png" height="30" alt="Download VST3 for macOS"></a>
   &nbsp;
   <a href="https://github.com/conjius-dp/boostor/releases/latest/download/boostor-macOS-AU.zip"><img src="Assets/badges/download-au-macos.png" height="30" alt="Download AU for macOS"></a>
   &nbsp;
   <a href="https://github.com/conjius-dp/boostor/releases/latest/download/Boostor-Windows-VST3.zip"><img src="Assets/badges/download-vst3-windows.png" height="30" alt="Download VST3 for Windows"></a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/conjius-dp/boostor/actions/workflows/ci.yml"><img src="https://github.com/conjius-dp/boostor/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="https://github.com/conjius-dp/boostor/releases/latest"><img src="https://img.shields.io/github/v/release/conjius-dp/boostor?label=stable&color=brightgreen" alt="Stable"></a>
+  <a href="https://github.com/conjius-dp/boostor/releases"><img src="https://img.shields.io/github/v/release/conjius-dp/boostor?include_prereleases&label=nightly" alt="Nightly"></a>
 </p>
 
 A simple audio plugin with a single gain knob ranging from -inf (silence) to +24 dB. The gain parameter is fully automatable, so DAWs can map it to any MIDI controller.
