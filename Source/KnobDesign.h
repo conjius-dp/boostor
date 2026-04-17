@@ -34,7 +34,8 @@ namespace KnobDesign
     inline constexpr float latencyTextScale  = 0.017f;  // latency label as fraction of window width
 
     // ── Window ──
-    inline constexpr int   defaultSize       = 450;
+    inline constexpr int   defaultSize       = 450;   // plugin width
+    inline constexpr int   defaultHeight     = 500;   // plugin height (taller than width)
     inline constexpr int   minSize           = 200;
     inline constexpr int   maxSize           = 800;
 
@@ -83,20 +84,23 @@ public:
         return juce::Font(juce::FontOptions().withHeight(height));
     }
 
-    // Compact orange corner resizer — three thin diagonal lines in the accent colour,
-    // drawn into a smaller square so the affordance isn't too visually heavy.
+    // Orange corner resizer — three diagonal lines in the accent colour.
+    // Default state uses a brighter tint + thicker strokes so the affordance
+    // is clearly visible at rest (previously very thin 1.5px strokes in the
+    // dim accent colour made it look invisible until the user grabbed it).
     void drawCornerResizer(juce::Graphics& g, int w, int h,
                            bool isMouseOver, bool isMouseDragging) override
     {
         const auto colour = (isMouseOver || isMouseDragging)
                             ? KnobDesign::accentHoverColour
-                            : KnobDesign::accentColour;
+                            : KnobDesign::accentColour.brighter(0.2f);
         g.setColour(colour);
 
-        const float inset = juce::jmin(static_cast<float>(w), static_cast<float>(h)) * 0.35f;
+        const float minDim = juce::jmin(static_cast<float>(w), static_cast<float>(h));
+        const float inset = minDim * 0.20f;
         const float right = static_cast<float>(w);
         const float bottom = static_cast<float>(h);
-        const float strokeW = juce::jmax(1.5f, juce::jmin(static_cast<float>(w), static_cast<float>(h)) * 0.05f);
+        const float strokeW = juce::jmax(2.5f, minDim * 0.11f);
 
         for (int i = 1; i <= 3; ++i)
         {

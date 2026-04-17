@@ -35,7 +35,7 @@ int main(int argc, char** argv)
 
     const juce::File outFile{ juce::String::fromUTF8(argv[1]) };
     const int   width  = parseInt (argc > 2 ? argv[2] : nullptr, KnobDesign::defaultSize);
-    const int   height = parseInt (argc > 3 ? argv[3] : nullptr, KnobDesign::defaultSize);
+    const int   height = parseInt (argc > 3 ? argv[3] : nullptr, KnobDesign::defaultHeight);
     const float scale  = parseFloat(argc > 4 ? argv[4] : nullptr, 2.0f);
 
     juce::ScopedJuceInitialiser_GUI scopedGUI;

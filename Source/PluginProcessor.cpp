@@ -156,7 +156,7 @@ void BoostorAudioProcessor::setStateInformation(const void* data, int sizeInByte
     {
         apvts.replaceState(juce::ValueTree::fromXml(*xml));
         editorWidth.store(xml->getIntAttribute("editorWidth", KnobDesign::defaultSize));
-        editorHeight.store(xml->getIntAttribute("editorHeight", KnobDesign::defaultSize));
+        editorHeight.store(xml->getIntAttribute("editorHeight", KnobDesign::defaultHeight));
     }
 }
 

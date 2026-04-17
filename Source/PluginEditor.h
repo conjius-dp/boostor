@@ -70,6 +70,9 @@ private:
     juce::Image logoImage;
     juce::Image titleLogoImage;
 
+    // Custom resize corner — larger than JUCE's default 16x16
+    std::unique_ptr<juce::ResizableCornerComponent> resizer;
+
     // Conjius logo hover animation (dim -> bright + scale up on hover)
     juce::Rectangle<int> logoBounds;
     bool  logoHoverTarget   = false;

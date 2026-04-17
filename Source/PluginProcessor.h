@@ -37,7 +37,7 @@ public:
 
     // Editor size persistence
     std::atomic<int> editorWidth  { KnobDesign::defaultSize };
-    std::atomic<int> editorHeight { KnobDesign::defaultSize };
+    std::atomic<int> editorHeight { KnobDesign::defaultHeight };
 
 private:
     juce::AudioProcessorValueTreeState apvts;

@@ -52,14 +52,26 @@ BoostorAudioProcessorEditor::BoostorAudioProcessorEditor(BoostorAudioProcessor& 
     addAndMakeVisible(latencyHitArea);
     latencyHitArea.toFront(false); // keep above latencyLabel
 
-    // Resizable square window — restore saved size or use default
+    // Resizable window (slightly taller than wide) — restore saved size or use default
     int savedW = processorRef.editorWidth.load();
     int savedH = processorRef.editorHeight.load();
+    setResizable(true, false); // we provide our own, larger corner
+    // Aspect ratio of width:height, fixed at default proportions (450:500 = 0.9)
+    const double aspect = static_cast<double>(KnobDesign::defaultSize)
+                        / static_cast<double>(KnobDesign::defaultHeight);
+    // Height limits scale from width limits via aspect
+    const int minH = static_cast<int>(KnobDesign::minSize / aspect);
+    const int maxH = static_cast<int>(KnobDesign::maxSize / aspect);
+    setResizeLimits(KnobDesign::minSize, minH, KnobDesign::maxSize, maxH);
+    getConstrainer()->setFixedAspectRatio(aspect);
+    resizer = std::make_unique<juce::ResizableCornerComponent>(this, getConstrainer());
+    resizer->setLookAndFeel(&conjusLAF);
+    addAndMakeVisible(resizer.get());
+    // setSize() must come AFTER the resizer is created — it triggers resized()
+    // which positions the resizer. Before this reorder, resized() ran while
+    // `resizer` was still null, so the handle stayed at 0x0 until the first
+    // user-driven resize.
     setSize(savedW, savedH);
-    setResizable(true, true);
-    setResizeLimits(KnobDesign::minSize, KnobDesign::minSize,
-                    KnobDesign::maxSize, KnobDesign::maxSize);
-    getConstrainer()->setFixedAspectRatio(1.0);
 
     logoImage = juce::ImageCache::getFromMemory(
         BinaryData::conjiusavatartransparentbg_png,
@@ -77,6 +89,7 @@ BoostorAudioProcessorEditor::BoostorAudioProcessorEditor(BoostorAudioProcessor& 
 
 BoostorAudioProcessorEditor::~BoostorAudioProcessorEditor()
 {
+    if (resizer) resizer->setLookAndFeel(nullptr);
     setLookAndFeel(nullptr);
     stopTimer();
 }
@@ -171,12 +184,12 @@ void BoostorAudioProcessorEditor::timerCallback()
         else
             hideDest = latencyHoverTarget ? 0.0f : 1.0f;
         if (std::abs(hideDest - latencyHideProgress) > 0.002f)
-            latencyHideProgress += (hideDest - latencyHideProgress) * 0.18f;
+            latencyHideProgress += (hideDest - latencyHideProgress) * 0.09f;
 
         // Apply font size and position each frame
         if (!latencyBaseBounds.isEmpty())
         {
-            float scale = 1.0f + 2.0f * latencyHoverProgress; // 1.0 → 3.0x
+            float scale = 1.0f + 1.4f * latencyHoverProgress; // 1.0 → 2.4x
             latencyLabel.setFont(conjusLAF.getRegularFont(latencyBaseFontSize * scale));
 
             // Slide down: fully offscreen when hideProgress = 1
@@ -229,10 +242,27 @@ void BoostorAudioProcessorEditor::paint(juce::Graphics& g)
                      / static_cast<float>(titleLogoImage.getHeight());
         float titleW = titleH * aspect;
         float titleX = (w - titleW) * 0.5f;
-        float titleY = h * 0.055f;
+        float titleY = h * 0.085f;  // logo nudged up ~25px from the border top
         g.drawImage(titleLogoImage,
                     juce::Rectangle<float>(titleX, titleY, titleW, titleH),
                     juce::RectanglePlacement::centred);
+    }
+
+    // Rounded orange border inside ~20px of bg padding. Radius matches the
+    // gain knob (windowSize * 0.35 / 2 → ~79px at default size).
+    {
+        const float scaleF  = static_cast<float>(getWidth())
+                            / static_cast<float>(KnobDesign::defaultSize);
+        const float pad     = 20.0f * scaleF;
+        const float borderW = 4.0f  * scaleF;
+        const float radius  = 79.0f * scaleF;
+        juce::Rectangle<float> borderRect{ pad, pad,
+                                           static_cast<float>(getWidth())  - 2.0f * pad,
+                                           static_cast<float>(getHeight()) - 2.0f * pad };
+        juce::Path border;
+        border.addRoundedRectangle(borderRect, radius);
+        g.setColour(KnobDesign::accentColour);
+        g.strokePath(border, juce::PathStrokeType(borderW));
     }
 }
 
@@ -242,6 +272,15 @@ void BoostorAudioProcessorEditor::resized()
     processorRef.editorWidth.store(getWidth());
     processorRef.editorHeight.store(getHeight());
 
+    if (resizer != nullptr)
+    {
+        const int handleSize = 28;
+        resizer->setBounds(getWidth() - handleSize, getHeight() - handleSize,
+                           handleSize, handleSize);
+        resizer->toFront(false);
+        resizer->repaint(); // force initial paint so handle is visible at rest
+    }
+
     float w = static_cast<float>(getWidth());
     float margin = w * 0.1f;
 
@@ -250,7 +289,7 @@ void BoostorAudioProcessorEditor::resized()
     gainLabel.setFont(conjusLAF.getBoldFont(gainFontSize));
     int gainLabelH = static_cast<int>(gainFontSize * 1.2f);
     // Title logo spans h * [0.04, 0.125], so start "Gain" just below it
-    int gainLabelY = static_cast<int>(getHeight() * 0.17f);
+    int gainLabelY = static_cast<int>(getHeight() * 0.27f);  // small portion of extra height added here, below the logo
     gainLabel.setBounds(0, gainLabelY, getWidth(), gainLabelH);
 
     // Dynamic latency label — centred at bottom edge, light weight
