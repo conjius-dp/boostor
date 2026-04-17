@@ -11,11 +11,11 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/conjius-dp/boostor/releases/latest/download/Boostor-macOS-VST3.zip"><img src="Assets/badges/download-vst3-macos.png" height="44" alt="Download VST3 for macOS"></a>
+  <a href="https://github.com/conjius-dp/boostor/releases/latest/download/Boostor-macOS-VST3.zip"><img src="Assets/badges/download-vst3-macos.png" height="30" alt="Download VST3 for macOS"></a>
   &nbsp;
-  <a href="https://github.com/conjius-dp/boostor/releases/latest/download/boostor-macOS-AU.zip"><img src="Assets/badges/download-au-macos.png" height="44" alt="Download AU for macOS"></a>
+  <a href="https://github.com/conjius-dp/boostor/releases/latest/download/boostor-macOS-AU.zip"><img src="Assets/badges/download-au-macos.png" height="30" alt="Download AU for macOS"></a>
   &nbsp;
-  <a href="https://github.com/conjius-dp/boostor/releases/latest/download/Boostor-Windows-VST3.zip"><img src="Assets/badges/download-vst3-windows.png" height="44" alt="Download VST3 for Windows"></a>
+  <a href="https://github.com/conjius-dp/boostor/releases/latest/download/Boostor-Windows-VST3.zip"><img src="Assets/badges/download-vst3-windows.png" height="30" alt="Download VST3 for Windows"></a>
 </p>
 
 A simple audio plugin with a single gain knob ranging from -inf (silence) to +24 dB. The gain parameter is fully automatable, so DAWs can map it to any MIDI controller.
