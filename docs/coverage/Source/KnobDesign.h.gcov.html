@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-04-17 10:08:05</td>
+            <td class="headerValue">2026-04-17 10:41:55</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryHi">90.9&nbsp;%</td>
@@ -138,12 +138,12 @@
 <span id="L76"><span class="lineNum">      76</span> <span class="tlaUNC">           0 :         return juce::Font(juce::FontOptions().withHeight(height).withStyle(&quot;Bold&quot;));</span></span>
 <span id="L77"><span class="lineNum">      77</span> <span class="tlaGNC">         320 :     }</span></span>
 <span id="L78"><span class="lineNum">      78</span>              : </span>
-<span id="L79"><span class="lineNum">      79</span> <span class="tlaGNC">         346 :     juce::Font getRegularFont(float height) const</span></span>
+<span id="L79"><span class="lineNum">      79</span> <span class="tlaGNC">         354 :     juce::Font getRegularFont(float height) const</span></span>
 <span id="L80"><span class="lineNum">      80</span>              :     {</span>
-<span id="L81"><span class="lineNum">      81</span> <span class="tlaGNC">         346 :         if (regularTypeface != nullptr)</span></span>
-<span id="L82"><span class="lineNum">      82</span> <span class="tlaGNC">         346 :             return juce::Font(juce::FontOptions(regularTypeface).withHeight(height));</span></span>
+<span id="L81"><span class="lineNum">      81</span> <span class="tlaGNC">         354 :         if (regularTypeface != nullptr)</span></span>
+<span id="L82"><span class="lineNum">      82</span> <span class="tlaGNC">         354 :             return juce::Font(juce::FontOptions(regularTypeface).withHeight(height));</span></span>
 <span id="L83"><span class="lineNum">      83</span> <span class="tlaUNC">           0 :         return juce::Font(juce::FontOptions().withHeight(height));</span></span>
-<span id="L84"><span class="lineNum">      84</span> <span class="tlaGNC">         346 :     }</span></span>
+<span id="L84"><span class="lineNum">      84</span> <span class="tlaGNC">         354 :     }</span></span>
 <span id="L85"><span class="lineNum">      85</span>              : </span>
 <span id="L86"><span class="lineNum">      86</span> <span class="tlaGNC">          62 :     void drawRotarySlider(juce::Graphics&amp; g,</span></span>
 <span id="L87"><span class="lineNum">      87</span>              :                           int x, int y, int width, int height,</span>
@@ -414,21 +414,21 @@
 <span id="L352"><span class="lineNum">     352</span> <span class="tlaGNC">          62 :                 if (isNegative)</span></span>
 <span id="L353"><span class="lineNum">     353</span>              :                 {</span>
 <span id="L354"><span class="lineNum">     354</span>              :                     // Draw minus pinned to left — bold, same as knob marker</span>
-<span id="L355"><span class="lineNum">     355</span> <span class="tlaGNC">          32 :                     g.setFont(pillMinusFont);</span></span>
-<span id="L356"><span class="lineNum">     356</span> <span class="tlaGNC">          96 :                     g.drawText(minusStr,</span></span>
-<span id="L357"><span class="lineNum">     357</span> <span class="tlaGNC">          64 :                                juce::Rectangle&lt;float&gt;(minusX, centreY - pillMinusFontSize * 0.5f,</span></span>
-<span id="L358"><span class="lineNum">     358</span> <span class="tlaGNC">          32 :                                                       minusW, pillMinusFontSize),</span></span>
-<span id="L359"><span class="lineNum">     359</span> <span class="tlaGNC">          32 :                                juce::Justification::centred, false);</span></span>
-<span id="L360"><span class="lineNum">     360</span> <span class="tlaGNC">          32 :                 }</span></span>
-<span id="L361"><span class="lineNum">     361</span> <span class="tlaGNC">          30 :                 else if (isPositive)</span></span>
+<span id="L355"><span class="lineNum">     355</span> <span class="tlaGNC">          31 :                     g.setFont(pillMinusFont);</span></span>
+<span id="L356"><span class="lineNum">     356</span> <span class="tlaGNC">          93 :                     g.drawText(minusStr,</span></span>
+<span id="L357"><span class="lineNum">     357</span> <span class="tlaGNC">          62 :                                juce::Rectangle&lt;float&gt;(minusX, centreY - pillMinusFontSize * 0.5f,</span></span>
+<span id="L358"><span class="lineNum">     358</span> <span class="tlaGNC">          31 :                                                       minusW, pillMinusFontSize),</span></span>
+<span id="L359"><span class="lineNum">     359</span> <span class="tlaGNC">          31 :                                juce::Justification::centred, false);</span></span>
+<span id="L360"><span class="lineNum">     360</span> <span class="tlaGNC">          31 :                 }</span></span>
+<span id="L361"><span class="lineNum">     361</span> <span class="tlaGNC">          31 :                 else if (isPositive)</span></span>
 <span id="L362"><span class="lineNum">     362</span>              :                 {</span>
 <span id="L363"><span class="lineNum">     363</span>              :                     // Draw plus pinned to left — bold, same weight as minus</span>
-<span id="L364"><span class="lineNum">     364</span> <span class="tlaGNC">          24 :                     g.setFont(pillMinusFont);</span></span>
-<span id="L365"><span class="lineNum">     365</span> <span class="tlaGNC">          24 :                     g.drawText(&quot;+&quot;,</span></span>
-<span id="L366"><span class="lineNum">     366</span> <span class="tlaGNC">          48 :                                juce::Rectangle&lt;float&gt;(minusX, centreY - pillMinusFontSize * 0.5f,</span></span>
-<span id="L367"><span class="lineNum">     367</span> <span class="tlaGNC">          24 :                                                       minusW, pillMinusFontSize),</span></span>
-<span id="L368"><span class="lineNum">     368</span> <span class="tlaGNC">          24 :                                juce::Justification::centred, false);</span></span>
-<span id="L369"><span class="lineNum">     369</span> <span class="tlaGNC">          24 :                 }</span></span>
+<span id="L364"><span class="lineNum">     364</span> <span class="tlaGNC">          25 :                     g.setFont(pillMinusFont);</span></span>
+<span id="L365"><span class="lineNum">     365</span> <span class="tlaGNC">          25 :                     g.drawText(&quot;+&quot;,</span></span>
+<span id="L366"><span class="lineNum">     366</span> <span class="tlaGNC">          50 :                                juce::Rectangle&lt;float&gt;(minusX, centreY - pillMinusFontSize * 0.5f,</span></span>
+<span id="L367"><span class="lineNum">     367</span> <span class="tlaGNC">          25 :                                                       minusW, pillMinusFontSize),</span></span>
+<span id="L368"><span class="lineNum">     368</span> <span class="tlaGNC">          25 :                                juce::Justification::centred, false);</span></span>
+<span id="L369"><span class="lineNum">     369</span> <span class="tlaGNC">          25 :                 }</span></span>
 <span id="L370"><span class="lineNum">     370</span>              : </span>
 <span id="L371"><span class="lineNum">     371</span>              :                 // Draw value digits left-aligned in the value zone — bold, same as dB</span>
 <span id="L372"><span class="lineNum">     372</span> <span class="tlaGNC">          62 :                 g.setFont(dbFont);</span></span>
