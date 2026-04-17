@@ -70,3 +70,17 @@ target_link_libraries(BoostorTests
     PUBLIC
         juce::juce_recommended_config_flags
         juce::juce_recommended_warning_flags)
+
+# --- Screenshot CLI ---
+# Headless renderer for the plugin editor — used by CI to generate the README image.
+add_executable(BoostorScreenshot
+    Tools/Screenshot.cpp)
+
+target_include_directories(BoostorScreenshot PRIVATE Source)
+
+target_link_libraries(BoostorScreenshot
+    PRIVATE
+        Boostor
+        BoostorBinaryData
+        juce::juce_audio_utils
+        juce::juce_gui_basics)
