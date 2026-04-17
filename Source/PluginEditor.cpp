@@ -11,6 +11,7 @@ BoostorAudioProcessorEditor::BoostorAudioProcessorEditor(BoostorAudioProcessor& 
 
     gainSlider.setSliderStyle(juce::Slider::RotaryVerticalDrag);
     gainSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 120, 30);
+    gainSlider.setMouseCursor(juce::MouseCursor::UpDownResizeCursor);
     addAndMakeVisible(gainSlider);
 
     gainLabel.setText("Gain", juce::dontSendNotification);
@@ -42,7 +43,14 @@ BoostorAudioProcessorEditor::BoostorAudioProcessorEditor(BoostorAudioProcessor& 
     latencyLabel.setText("Latency: 0ms", juce::dontSendNotification);
     latencyLabel.setJustificationType(juce::Justification::centredLeft);
     latencyLabel.setColour(juce::Label::textColourId, KnobDesign::accentColour.darker(0.3f));
+    // Label doesn't intercept — the HitArea above it handles hover and clicks
+    latencyLabel.setInterceptsMouseClicks(false, false);
     addAndMakeVisible(latencyLabel);
+
+    latencyHitArea.onClick = [this]() { latencyHidden = !latencyHidden; };
+    latencyHitArea.onHover = [this](bool over) { latencyHoverTarget = over; };
+    addAndMakeVisible(latencyHitArea);
+    latencyHitArea.toFront(false); // keep above latencyLabel
 
     // Resizable square window — restore saved size or use default
     int savedW = processorRef.editorWidth.load();
@@ -57,6 +65,13 @@ BoostorAudioProcessorEditor::BoostorAudioProcessorEditor(BoostorAudioProcessor& 
         BinaryData::conjiusavatartransparentbg_png,
         BinaryData::conjiusavatartransparentbg_pngSize);
 
+    titleLogoImage = juce::ImageCache::getFromMemory(
+        BinaryData::boostorlogoorange_png,
+        BinaryData::boostorlogoorange_pngSize);
+
+    // Receive mouse events from self and children (for conjius logo hover detection)
+    addMouseListener(this, true);
+
     startTimerHz(60);
 }
 
@@ -66,28 +81,158 @@ BoostorAudioProcessorEditor::~BoostorAudioProcessorEditor()
     stopTimer();
 }
 
+void BoostorAudioProcessorEditor::mouseMove(const juce::MouseEvent& e)
+{
+    auto pos = e.getEventRelativeTo(this).getPosition();
+    logoHoverTarget = logoBounds.contains(pos);
+    setMouseCursor(logoHoverTarget
+                   ? juce::MouseCursor::PointingHandCursor
+                   : juce::MouseCursor::NormalCursor);
+}
+
+void BoostorAudioProcessorEditor::mouseExit(const juce::MouseEvent& e)
+{
+    if (e.eventComponent == this)
+    {
+        logoHoverTarget = false;
+        setMouseCursor(juce::MouseCursor::NormalCursor);
+    }
+}
+
+void BoostorAudioProcessorEditor::mouseDown(const juce::MouseEvent& /*e*/) {}
+
 void BoostorAudioProcessorEditor::timerCallback()
 {
     updateSnapAnimation(gainSlider, gainAnim);
 
-    float latencyMs = processorRef.getLastProcessLatencyMs();
-    latencyLabel.setText("Latency: " + juce::String(latencyMs, 3) + "ms",
-                         juce::dontSendNotification);
+    // Update latency text only every 12th frame (~5 Hz) so the number is readable
+    static int latencyTick = 0;
+    if (++latencyTick >= 12)
+    {
+        latencyTick = 0;
+        float latencyMs = processorRef.getLastProcessLatencyMs();
+        latencyLabel.setText("Latency: " + juce::String(latencyMs, 3) + "ms",
+                             juce::dontSendNotification);
+    }
+
+    // Animate conjius logo hover state
+    float target = logoHoverTarget ? 1.0f : 0.0f;
+    if (std::abs(target - logoHoverProgress) > 0.002f)
+    {
+        logoHoverProgress += (target - logoHoverProgress) * 0.18f;
+        repaint(logoBounds.expanded(static_cast<int>(logoBounds.getWidth() * 0.2f)));
+    }
+
+    // Animate knob hover colour — restrict hover to the knob circle itself + the pill,
+    // not the slider's full bounding rect (which spans the whole window).
+    {
+        auto& props = gainSlider.getProperties();
+        float current = static_cast<float>(props.getWithDefault("hoverProgress", 0.0));
+
+        auto mouse = getMouseXYRelative();
+        float windowSize = static_cast<float>(juce::jmin(getWidth(), getHeight()));
+        float knobCx = static_cast<float>(getWidth()) * 0.5f;
+        float knobCy = static_cast<float>(getHeight()) * 0.56f;
+        float knobR  = windowSize * 0.35f * 0.5f;
+        float dx = static_cast<float>(mouse.x) - knobCx;
+        float dy = static_cast<float>(mouse.y) - knobCy;
+        bool overKnob = (dx * dx + dy * dy) <= (knobR * knobR);
+
+        // Pill hit area: approximate rectangle just below the knob within the slider's text box
+        auto sbounds = gainSlider.getBounds();
+        int pillW = static_cast<int>(windowSize * 0.28f);
+        int pillH = static_cast<int>(windowSize * 0.07f);
+        juce::Rectangle<int> pillHit(sbounds.getCentreX() - pillW / 2,
+                                     sbounds.getBottom() - pillH - 4,
+                                     pillW, pillH);
+        bool overPill = pillHit.contains(mouse);
+        bool dragging = gainSlider.isMouseButtonDown(false);
+
+        float dest = (overKnob || overPill || dragging) ? 1.0f : 0.0f;
+        if (std::abs(dest - current) > 0.002f)
+        {
+            current += (dest - current) * 0.22f;
+            props.set("hoverProgress", current);
+            gainSlider.repaint();
+        }
+    }
+
+    // Animate latency label: hover growth (when visible) + slide out/in (when hidden)
+    {
+        // Hover growth: scales 3x on hover in both modes (visible and peek)
+        float hoverDest = latencyHoverTarget ? 1.0f : 0.0f;
+        if (std::abs(hoverDest - latencyHoverProgress) > 0.002f)
+            latencyHoverProgress += (hoverDest - latencyHoverProgress) * 0.22f;
+
+        // Hide: target 1 if hidden+not hovered (fully slid out); 0 if visible or peeking
+        float hideDest;
+        if (!latencyHidden)
+            hideDest = 0.0f;
+        else
+            hideDest = latencyHoverTarget ? 0.0f : 1.0f;
+        if (std::abs(hideDest - latencyHideProgress) > 0.002f)
+            latencyHideProgress += (hideDest - latencyHideProgress) * 0.18f;
+
+        // Apply font size and position each frame
+        if (!latencyBaseBounds.isEmpty())
+        {
+            float scale = 1.0f + 2.0f * latencyHoverProgress; // 1.0 → 3.0x
+            latencyLabel.setFont(conjusLAF.getRegularFont(latencyBaseFontSize * scale));
+
+            // Slide down: fully offscreen when hideProgress = 1
+            float slidePx = static_cast<float>(latencyBaseBounds.getHeight()) * 2.0f * latencyHideProgress;
+            // Expand label bounds to fit the scaled text without clipping, anchoring
+            // the expansion to the bottom of the label (so growth stays above the baseline)
+            int scaledH = static_cast<int>(latencyBaseBounds.getHeight() * scale);
+            int extra = scaledH - latencyBaseBounds.getHeight();
+            auto bounds = latencyBaseBounds.withY(latencyBaseBounds.getY() - extra)
+                                           .withHeight(scaledH)
+                                           .translated(0, static_cast<int>(slidePx));
+            latencyLabel.setBounds(bounds);
+        }
+    }
 }
 
 void BoostorAudioProcessorEditor::paint(juce::Graphics& g)
 {
     g.fillAll(KnobDesign::bgColour);
 
-    // Draw logo in bottom-left corner
+    // Draw conjius logo in bottom-left — dim by default, brighten + scale up on hover
     if (logoImage.isValid())
     {
         float scale = static_cast<float>(getWidth()) / static_cast<float>(KnobDesign::defaultSize);
-        int logoSize = static_cast<int>(37.5f * scale);  // 150/4 = 37.5
-        int padLeft = logoSize / 3;
+        int baseSize = static_cast<int>(37.5f * scale);
+        int padLeft = baseSize / 3;
+        int baseX = padLeft;
+        int baseY = getHeight() - baseSize;
+        logoBounds = { baseX, baseY, baseSize, baseSize };
+
+        float hoverScale = 1.0f + 0.2f * logoHoverProgress;
+        int drawSize = static_cast<int>(baseSize * hoverScale);
+        int drawX = baseX + (baseSize - drawSize) / 2;
+        int drawY = baseY + (baseSize - drawSize) / 2;
+        float brightness = 0.35f + 0.65f * logoHoverProgress;
+        g.setOpacity(brightness);
         g.drawImage(logoImage,
-                    padLeft, getHeight() - logoSize, logoSize, logoSize,
+                    drawX, drawY, drawSize, drawSize,
                     0, 0, logoImage.getWidth(), logoImage.getHeight());
+        g.setOpacity(1.0f);
+    }
+
+    // Title logo at top-centre, small
+    if (titleLogoImage.isValid())
+    {
+        float w = static_cast<float>(getWidth());
+        float h = static_cast<float>(getHeight());
+        float titleH = h * 0.09f;
+        float aspect = static_cast<float>(titleLogoImage.getWidth())
+                     / static_cast<float>(titleLogoImage.getHeight());
+        float titleW = titleH * aspect;
+        float titleX = (w - titleW) * 0.5f;
+        float titleY = h * 0.055f;
+        g.drawImage(titleLogoImage,
+                    juce::Rectangle<float>(titleX, titleY, titleW, titleH),
+                    juce::RectanglePlacement::centred);
     }
 }
 
@@ -100,11 +245,12 @@ void BoostorAudioProcessorEditor::resized()
     float w = static_cast<float>(getWidth());
     float margin = w * 0.1f;
 
-    // Dynamic "Gain" label — near top
+    // Dynamic "Gain" label — placed below the title logo
     float gainFontSize = w * KnobDesign::gainLabelScale;
     gainLabel.setFont(conjusLAF.getBoldFont(gainFontSize));
     int gainLabelH = static_cast<int>(gainFontSize * 1.2f);
-    int gainLabelY = static_cast<int>(margin * 0.5f);
+    // Title logo spans h * [0.04, 0.125], so start "Gain" just below it
+    int gainLabelY = static_cast<int>(getHeight() * 0.17f);
     gainLabel.setBounds(0, gainLabelY, getWidth(), gainLabelH);
 
     // Dynamic latency label — centred at bottom edge, light weight
@@ -112,14 +258,27 @@ void BoostorAudioProcessorEditor::resized()
     latencyLabel.setFont(conjusLAF.getRegularFont(latencyFontSize));
     latencyLabel.setJustificationType(juce::Justification::centredBottom);
     int latencyH = static_cast<int>(latencyFontSize * 2.0f);
-    latencyLabel.setBounds(0, getHeight() - latencyH, getWidth(), latencyH);
+    latencyBaseBounds = { 0, getHeight() - latencyH, getWidth(), latencyH };
+    latencyBaseFontSize = latencyFontSize;
+    // Hit area: narrow — matches the actual text width with a small horizontal pad
+    auto latencyFont = conjusLAF.getRegularFont(latencyFontSize);
+    int textW = static_cast<int>(latencyFont.getStringWidthFloat("Latency: 0.000ms"));
+    int hitPadX = static_cast<int>(latencyFontSize * 0.8f);
+    int hitPadY = latencyH;
+    int hitW = textW + 2 * hitPadX;
+    int hitX = (getWidth() - hitW) / 2;
+    latencyHitArea.setBounds(hitX, getHeight() - latencyH - hitPadY, hitW, latencyH + hitPadY);
+    latencyHitArea.toFront(false);
+    // Initial label bounds: apply current animation state in case resize happens mid-anim
+    int slideOffset = static_cast<int>(latencyH * 2.0f * latencyHideProgress);
+    latencyLabel.setBounds(latencyBaseBounds.translated(0, slideOffset));
 
     // Slider fills most of the window — knob draws at window centre independently
     // Text box at bottom of slider area positions the dB readout
     float dbFontSize = w * KnobDesign::dbTextScale;
     int sliderTop = gainLabelY + gainLabelH;
     // End slider area above the latency label, closer to centre
-    int sliderBottom = static_cast<int>(getHeight() * 0.82f);
+    int sliderBottom = static_cast<int>(getHeight() * 0.90f);
     gainSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false,
                                static_cast<int>(w * 0.8f),
                                static_cast<int>(dbFontSize * 2.0f));

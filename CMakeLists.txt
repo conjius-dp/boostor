@@ -24,6 +24,7 @@ target_sources(Boostor
 juce_add_binary_data(BoostorBinaryData
     SOURCES
         Assets/conjius-avatar-transparent-bg.png
+        Assets/boostor-logo-orange.png
         Assets/Inconsolata-Bold.ttf
         Assets/Inconsolata-Regular.ttf)
 

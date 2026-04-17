@@ -4,8 +4,9 @@
 namespace KnobDesign
 {
     // ── Colors (matching conji.us) ──
-    inline const juce::Colour bgColour       { 0xff111111 };  // #111
-    inline const juce::Colour accentColour   { 0xffd48300 };  // #d48300
+    inline const juce::Colour bgColour         { 0xff111111 };  // #111
+    inline const juce::Colour accentColour     { 0xffd48300 };  // #d48300
+    inline const juce::Colour accentHoverColour{ 0xffffb84d };  // much lighter orange for hover/press
 
     // ── Knob geometry (proportional to diameter) ──
     // All stroke/size values are fractions of the knob diameter
@@ -30,7 +31,7 @@ namespace KnobDesign
     inline constexpr float labelFontScale    = 0.18f;   // "0"/"11" font size as fraction of diameter
     inline constexpr float gainLabelScale    = 0.06f;   // "Gain" font size as fraction of window width
     inline constexpr float dbTextScale       = 0.06f;   // dB readout as fraction of window width
-    inline constexpr float latencyTextScale  = 0.03f;   // latency label as fraction of window width
+    inline constexpr float latencyTextScale  = 0.017f;  // latency label as fraction of window width
 
     // ── Window ──
     inline constexpr int   defaultSize       = 450;
@@ -97,20 +98,25 @@ public:
         float windowW = parent ? static_cast<float>(parent->getWidth()) : bounds.getWidth();
         float windowH = parent ? static_cast<float>(parent->getHeight()) : bounds.getHeight();
         float windowSize = juce::jmin(windowW, windowH);
-        float diameter = windowSize * 0.42f;
+        float diameter = windowSize * 0.35f;
         float radius = diameter * 0.5f;
-        // Centre the knob at the centre of the full window
+        // Centre the knob a little below the middle so the title has room at top
         float cx = bounds.getCentreX();
         float sliderY = static_cast<float>(slider.getY());
-        float cy = windowH * 0.5f - sliderY;
+        float cy = windowH * 0.56f - sliderY;
 
         // Scale strokes to diameter
         float strokeW = diameter * knobStrokeFrac;
         float indW = diameter * indicatorWidthFrac;
         float tickW = diameter * tickStrokeFrac;
 
+        // Interactive colour: smoothly interpolate toward accentHoverColour on hover/drag
+        float hoverProgress = static_cast<float>(
+            slider.getProperties().getWithDefault("hoverProgress", 0.0));
+        auto interactiveColour = accentColour.interpolatedWith(accentHoverColour, hoverProgress);
+
         // ── Draw knob circle ──
-        g.setColour(accentColour);
+        g.setColour(interactiveColour);
         g.drawEllipse(cx - radius + strokeW * 0.5f,
                       cy - radius + strokeW * 0.5f,
                       diameter - strokeW,
@@ -127,7 +133,7 @@ public:
                                  cy - std::cos(angle) * innerR);
         indicator.lineTo(cx + std::sin(angle) * outerR,
                          cy - std::cos(angle) * outerR);
-        g.setColour(accentColour);
+        g.setColour(interactiveColour);
         g.strokePath(indicator,
                      juce::PathStrokeType(indW,
                                           juce::PathStrokeType::curved,
@@ -143,6 +149,8 @@ public:
             juce::degreesToRadians(rotationEndAngle)      // +24 dB (right)
         };
 
+        // Ticks and tick labels always use the base accent colour (no hover highlight)
+        g.setColour(accentColour);
         for (int i = 0; i < 3; ++i)
         {
             juce::Path tick;
@@ -280,12 +288,20 @@ public:
             // Centre the pill horizontally in the label
             float labelW = static_cast<float>(label.getWidth());
             float pillX = (labelW - pillW) * 0.5f;
-            float pillY = (static_cast<float>(label.getHeight()) - pillH) * 0.5f + 8.0f;
+            float pillY = (static_cast<float>(label.getHeight()) - pillH) * 0.5f - pillH * 0.2f;
 
             auto pillBounds = juce::Rectangle<float>(pillX, pillY, pillW, pillH);
 
+            // Interactive pill colour: smoothly animate toward accentHoverColour when parent slider is hovered/dragged
+            float pillHoverProgress = 0.0f;
+            if (auto* parentSlider = label.findParentComponentOfClass<juce::Slider>())
+                pillHoverProgress = static_cast<float>(
+                    parentSlider->getProperties().getWithDefault("hoverProgress", 0.0));
+            auto pillFillColour = KnobDesign::accentColour
+                .interpolatedWith(KnobDesign::accentHoverColour, pillHoverProgress);
+
             // Draw orange pill background with fully circular edges
-            g.setColour(KnobDesign::accentColour);
+            g.setColour(pillFillColour);
             g.fillRoundedRectangle(pillBounds, pillH * 0.5f);
 
             g.setColour(KnobDesign::bgColour);
