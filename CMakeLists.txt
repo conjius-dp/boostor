@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.22)
-project(Boostor VERSION 0.0.14)
+project(Boostor VERSION 0.0.15)
 
 add_subdirectory(JUCE)
 
