@@ -15,8 +15,13 @@
 <p align="center">
   <a href="https://github.com/conjius-dp/boostor/actions/workflows/ci.yml"><img src="https://github.com/conjius-dp/boostor/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <a href="https://github.com/conjius-dp/boostor/actions/workflows/ci.yml"><img src="https://img.shields.io/endpoint?url=https%3A%2F%2Fconjius-dp.github.io%2Fboostor%2Fcoverage.json" alt="Coverage"></a>
-  <a href="https://github.com/conjius-dp/boostor/releases/latest"><img src="https://img.shields.io/github/v/release/conjius-dp/boostor?label=stable&color=brightgreen" alt="Stable"></a>
-  <a href="https://github.com/conjius-dp/boostor/releases"><img src="https://img.shields.io/github/v/release/conjius-dp/boostor?include_prereleases&label=nightly" alt="Nightly"></a>
+  <a href="https://github.com/conjius-dp/boostor/releases/latest"><img src="https://img.shields.io/github/v/release/conjius-dp/boostor?label=stable&color=4c1" alt="Stable"></a>
+  <a href="https://github.com/conjius-dp/boostor/releases"><img src="https://img.shields.io/github/v/release/conjius-dp/boostor?include_prereleases&label=nightly&color=d48300" alt="Nightly"></a>
+  <a href="https://github.com/conjius-dp/boostor/releases"><img src="https://img.shields.io/github/downloads/conjius-dp/boostor/total?label=downloads&color=d48300" alt="Total downloads"></a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/conjius-dp/boostor/graphs/commit-activity"><img src="https://repobeats.axiom.co/api/embed/REPOBEATS_HASH_BOOSTOR.svg" alt="Commit activity"></a>
 </p>
 
 A simple audio plugin with a single gain knob ranging from -inf (silence) to +24 dB. The gain parameter is fully automatable, so DAWs can map it to any MIDI controller.
