@@ -303,16 +303,17 @@ void BoostorAudioProcessorEditor::resized()
 
     float w = static_cast<float>(getWidth());
 
-    // Bypass button — top-right corner. Padding on top + right are equal
-    // and larger than the first pass so the button sits comfortably inside
-    // the orange border, a bit lower and further left than the original
-    // tight-corner position.
+    // Bypass button — sits OUTSIDE the orange border, tucked into the
+    // window's top-right corner with a small gap from both edges. The
+    // border (drawn in paint() after children) doesn't overlap the
+    // button because the button lives in the corner area outside the
+    // border's rounded rect.
     {
         const float scaleF  = w / static_cast<float>(KnobDesign::defaultSize);
-        const float btnPad  = 56.0f * scaleF;   // was 36 — nudged inward
+        const float edgeGap = 8.0f  * scaleF;
         const float btnSize = 34.0f * scaleF;
-        const float btnX    = static_cast<float>(getWidth()) - btnPad - btnSize;
-        const float btnY    = btnPad;
+        const float btnX    = static_cast<float>(getWidth()) - edgeGap - btnSize;
+        const float btnY    = edgeGap;
         bypassButton.setBounds(static_cast<int>(btnX),
                                static_cast<int>(btnY),
                                static_cast<int>(btnSize),
