@@ -84,20 +84,20 @@ jobs:
       - name: Zip VST3
         run: |
           cd build/Boostor_artefacts/Release/VST3
-          zip -r "$GITHUB_WORKSPACE/boostor-${VERSION}-macos-vst3.zip" boostor.vst3
+          zip -r "$GITHUB_WORKSPACE/Boostor-macOS-VST3.zip" boostor.vst3
 
       - name: Zip AU
         run: |
           cd build/Boostor_artefacts/Release/AU
-          zip -r "$GITHUB_WORKSPACE/boostor-${VERSION}-macos-au.zip" boostor.component
+          zip -r "$GITHUB_WORKSPACE/boostor-macOS-AU.zip" boostor.component
 
       - name: Upload macOS artifacts
         uses: actions/upload-artifact@v4
         with:
           name: macos-artifacts
           path: |
-            boostor-${{ env.VERSION }}-macos-vst3.zip
-            boostor-${{ env.VERSION }}-macos-au.zip
+            Boostor-macOS-VST3.zip
+            boostor-macOS-AU.zip
 
       - name: Upload screenshot artifact
         uses: actions/upload-artifact@v4
@@ -168,13 +168,13 @@ jobs:
 
       - name: Zip VST3
         shell: pwsh
-        run: Compress-Archive -Path "build\Boostor_artefacts\Release\VST3\boostor.vst3" -DestinationPath "boostor-${env:VERSION}-windows-vst3.zip"
+        run: Compress-Archive -Path "build\Boostor_artefacts\Release\VST3\boostor.vst3" -DestinationPath "Boostor-Windows-VST3.zip"
 
       - name: Upload Windows artifacts
         uses: actions/upload-artifact@v4
         with:
           name: windows-artifacts
-          path: boostor-${{ env.VERSION }}-windows-vst3.zip
+          path: Boostor-Windows-VST3.zip
 
       - name: Cancel workflow if this job failed
         if: failure()
@@ -241,6 +241,6 @@ jobs:
           prerelease: ${{ contains(env.VERSION, '-') }}
           generate_release_notes: true
           files: |
-            boostor-${{ env.VERSION }}-macos-vst3.zip
-            boostor-${{ env.VERSION }}-macos-au.zip
-            boostor-${{ env.VERSION }}-windows-vst3.zip
+            Boostor-macOS-VST3.zip
+            boostor-macOS-AU.zip
+            Boostor-Windows-VST3.zip
