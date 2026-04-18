@@ -21,6 +21,10 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       plugin_changed: ${{ steps.filter.outputs.plugin_changed }}
+      channel: ${{ steps.channel.outputs.channel }}
+      version: ${{ steps.version.outputs.version }}
+      full_version: ${{ steps.version.outputs.full_version }}
+      tag: ${{ steps.version.outputs.tag }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -46,10 +50,38 @@ jobs:
             fi
           fi
 
+      - name: Determine release channel
+        id: channel
+        # Manual dispatch => stable, automatic CI trigger => nightly.
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "channel=stable" >> "$GITHUB_OUTPUT"
+          else
+            echo "channel=nightly" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Compute next version
+        id: version
+        run: |
+          CURRENT=$(sed -n 's/.*project(Boostor VERSION \([0-9]*\.[0-9]*\.[0-9]*\)).*/\1/p' CMakeLists.txt)
+          MAJOR=$(echo "$CURRENT" | cut -d. -f1)
+          MINOR=$(echo "$CURRENT" | cut -d. -f2)
+          PATCH=$(echo "$CURRENT" | cut -d. -f3)
+          NEW_PATCH=$((PATCH + 1))
+          NEW_VERSION="${MAJOR}.${MINOR}.${NEW_PATCH}"
+          CHANNEL="${{ steps.channel.outputs.channel }}"
+          FULL="${NEW_VERSION}-${CHANNEL}"
+          echo "version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
+          echo "full_version=$FULL" >> "$GITHUB_OUTPUT"
+          echo "tag=v${FULL}" >> "$GITHUB_OUTPUT"
+          echo "Next release: v${FULL}"
+
   build-macos:
     needs: check-changes
     if: needs.check-changes.outputs.plugin_changed == 'true'
     runs-on: macos-15
+    env:
+      FULL_VERSION: ${{ needs.check-changes.outputs.full_version }}
 
     steps:
       - name: Checkout
@@ -80,34 +112,28 @@ jobs:
         run: cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_C_COMPILER_LAUNCHER=ccache
 
       - name: Build plugin + screenshot (parallel)
-        run: cmake --build build --target Boostor_Standalone Boostor_VST3 Boostor_AU BoostorScreenshot
+        run: cmake --build build --target Boostor_VST3 Boostor_AU BoostorScreenshot
 
       - name: Render screenshot PNG
         run: ./build/BoostorScreenshot screenshot.png
 
-      - name: Zip Standalone
-        run: |
-          cd build/Boostor_artefacts/Release/Standalone
-          zip -r "$GITHUB_WORKSPACE/Boostor-macOS-Standalone.zip" boostor.app
-
       - name: Zip VST3
         run: |
           cd build/Boostor_artefacts/Release/VST3
-          zip -r "$GITHUB_WORKSPACE/Boostor-macOS-VST3.zip" boostor.vst3
+          zip -r "$GITHUB_WORKSPACE/boostor-${FULL_VERSION}-macos-vst3.zip" boostor.vst3
 
       - name: Zip AU
         run: |
           cd build/Boostor_artefacts/Release/AU
-          zip -r "$GITHUB_WORKSPACE/boostor-macOS-AU.zip" boostor.component
+          zip -r "$GITHUB_WORKSPACE/boostor-${FULL_VERSION}-macos-au.zip" boostor.component
 
       - name: Upload macOS artifacts
         uses: actions/upload-artifact@v4
         with:
           name: macos-artifacts
           path: |
-            Boostor-macOS-Standalone.zip
-            Boostor-macOS-VST3.zip
-            boostor-macOS-AU.zip
+            boostor-${{ env.FULL_VERSION }}-macos-vst3.zip
+            boostor-${{ env.FULL_VERSION }}-macos-au.zip
 
       - name: Upload screenshot artifact
         uses: actions/upload-artifact@v4
@@ -124,6 +150,7 @@ jobs:
     if: needs.check-changes.outputs.plugin_changed == 'true'
     runs-on: windows-latest
     env:
+      FULL_VERSION: ${{ needs.check-changes.outputs.full_version }}
       SCCACHE_DIR: ${{ github.workspace }}\sccache
       SCCACHE_CACHE_SIZE: 2G
 
@@ -156,8 +183,6 @@ jobs:
           restore-keys: sccache-release-windows-
 
       - name: Cache CMake build directory
-        # Skips most of the CMake configure work when the build tree is restored —
-        # Ninja just checks stamps and rebuilds whatever actually changed.
         uses: actions/cache@v4
         with:
           path: build
@@ -172,22 +197,26 @@ jobs:
 
       - name: Zip VST3
         shell: pwsh
-        run: |
-          Compress-Archive -Path build\Boostor_artefacts\Release\VST3\boostor.vst3 -DestinationPath Boostor-Windows-VST3.zip
+        run: Compress-Archive -Path "build\Boostor_artefacts\Release\VST3\boostor.vst3" -DestinationPath "boostor-${env:FULL_VERSION}-windows-vst3.zip"
 
       - name: Upload Windows artifacts
         uses: actions/upload-artifact@v4
         with:
           name: windows-artifacts
-          path: Boostor-Windows-VST3.zip
+          path: boostor-${{ env.FULL_VERSION }}-windows-vst3.zip
 
       - name: Cancel workflow if this job failed
         if: failure()
         uses: andymckay/cancel-action@0.5
 
   release:
-    needs: [build-macos, build-windows]
+    needs: [check-changes, build-macos, build-windows]
     runs-on: ubuntu-latest
+    env:
+      VERSION: ${{ needs.check-changes.outputs.version }}
+      FULL_VERSION: ${{ needs.check-changes.outputs.full_version }}
+      CHANNEL: ${{ needs.check-changes.outputs.channel }}
+      TAG: ${{ needs.check-changes.outputs.tag }}
 
     steps:
       - name: Checkout
@@ -235,48 +264,35 @@ jobs:
           git push origin gh-pages
           cd "$GITHUB_WORKSPACE"
 
-      - name: Read version and bump patch
-        id: version
+      - name: Bump CMakeLists version
         run: |
           CURRENT=$(sed -n 's/.*project(Boostor VERSION \([0-9]*\.[0-9]*\.[0-9]*\)).*/\1/p' CMakeLists.txt)
-          MAJOR=$(echo "$CURRENT" | cut -d. -f1)
-          MINOR=$(echo "$CURRENT" | cut -d. -f2)
-          PATCH=$(echo "$CURRENT" | cut -d. -f3)
-
-          NEW_PATCH=$((PATCH + 1))
-          NEW_VERSION="${MAJOR}.${MINOR}.${NEW_PATCH}"
-
-          sed -i "s/project(Boostor VERSION ${CURRENT})/project(Boostor VERSION ${NEW_VERSION})/" CMakeLists.txt
-
-          echo "version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
-          echo "tag=v${NEW_VERSION}" >> "$GITHUB_OUTPUT"
+          sed -i "s/project(Boostor VERSION ${CURRENT})/project(Boostor VERSION ${VERSION})/" CMakeLists.txt
 
       - name: Commit version bump
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add CMakeLists.txt
-          git commit -m "Bump version to ${{ steps.version.outputs.tag }}"
+          git commit -m "Bump version to ${TAG}"
           git push
 
       - name: Tag release
         run: |
-          git tag -a ${{ steps.version.outputs.tag }} -m "Release ${{ steps.version.outputs.tag }}"
-          git push origin ${{ steps.version.outputs.tag }}
+          git tag -a "${TAG}" -m "Release ${TAG}"
+          git push origin "${TAG}"
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ steps.version.outputs.tag }}
-          name: boostor ${{ steps.version.outputs.tag }}
+          tag_name: ${{ env.TAG }}
+          name: boostor ${{ env.FULL_VERSION }}
           body: |
             **Artifacts:**
-            - `Boostor-macOS-Standalone.zip` - macOS standalone app
-            - `Boostor-macOS-VST3.zip` - macOS VST3 plugin
-            - `boostor-macOS-AU.zip` - macOS AU plugin
-            - `Boostor-Windows-VST3.zip` - Windows VST3 plugin
+            - `boostor-${{ env.FULL_VERSION }}-macos-vst3.zip` — macOS VST3 plugin
+            - `boostor-${{ env.FULL_VERSION }}-macos-au.zip` — macOS AU plugin
+            - `boostor-${{ env.FULL_VERSION }}-windows-vst3.zip` — Windows VST3 plugin
           files: |
-            Boostor-macOS-Standalone.zip
-            Boostor-macOS-VST3.zip
-            boostor-macOS-AU.zip
-            Boostor-Windows-VST3.zip
+            boostor-${{ env.FULL_VERSION }}-macos-vst3.zip
+            boostor-${{ env.FULL_VERSION }}-macos-au.zip
+            boostor-${{ env.FULL_VERSION }}-windows-vst3.zip
