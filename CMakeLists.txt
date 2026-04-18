@@ -49,11 +49,15 @@ enable_testing()
 
 juce_add_console_app(BoostorTests PRODUCT_NAME "BoostorTests")
 
+target_include_directories(BoostorTests PRIVATE Source)
+
 target_sources(BoostorTests
     PRIVATE
         Tests/GainTest.cpp
+        Tests/TestBypassButton.cpp
         Source/PluginProcessor.cpp
-        Source/KnobDesign.h)
+        Source/KnobDesign.h
+        Source/BypassButtonMetrics.h)
 
 target_compile_definitions(BoostorTests
     PRIVATE

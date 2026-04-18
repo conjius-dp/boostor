@@ -318,6 +318,15 @@ void BoostorAudioProcessorEditor::resized()
                                static_cast<int>(btnSize),
                                static_cast<int>(btnSize));
         bypassButton.toFront(false);
+
+        // Ring stroke matches the knob's outline stroke — boostor draws
+        // the knob at windowSize * 0.42 (see LookAndFeel below) with
+        // KnobDesign::knobStrokeFrac, so we reuse exactly the same
+        // thickness formula. The ring is stroked inside the disc bounds
+        // so the centred power glyph keeps its identical size.
+        const float windowSize = juce::jmin(w, static_cast<float>(getHeight()));
+        const float knobDiameter = windowSize * 0.42f;
+        bypassButton.setRingStrokeWidth(knobDiameter * KnobDesign::knobStrokeFrac);
     }
 
     // Dynamic "Gain" label — placed below the title logo
