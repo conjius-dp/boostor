@@ -40,7 +40,7 @@ BoostorAudioProcessorEditor::BoostorAudioProcessorEditor(BoostorAudioProcessor& 
         startSnapAnimation(gainSlider, gainAnim);
     };
 
-    latencyLabel.setText("LATENCY: 0ms", juce::dontSendNotification);
+    latencyLabel.setText("LATENCY: 0.000ms", juce::dontSendNotification);
     latencyLabel.setJustificationType(juce::Justification::centredLeft);
     latencyLabel.setColour(juce::Label::textColourId, KnobDesign::accentColour.darker(0.3f));
     // Label doesn't intercept — the HitArea above it handles hover and clicks
@@ -51,6 +51,13 @@ BoostorAudioProcessorEditor::BoostorAudioProcessorEditor(BoostorAudioProcessor& 
     latencyHitArea.onHover = [this](bool over) { latencyHoverTarget = over; };
     addAndMakeVisible(latencyHitArea);
     latencyHitArea.toFront(false); // keep above latencyLabel
+
+    // Bypass button — power-switch in the top-right corner. Drives the
+    // APVTS bool parameter via ButtonAttachment; processBlock early-returns
+    // on that flag for a true untouched pass-through.
+    addAndMakeVisible(bypassButton);
+    bypassAttachment = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(
+        processorRef.getAPVTS(), "bypass", bypassButton);
 
     // Resizable window (slightly taller than wide) — restore saved size or use default
     int savedW = processorRef.editorWidth.load();
@@ -96,9 +103,13 @@ BoostorAudioProcessorEditor::~BoostorAudioProcessorEditor()
 
 void BoostorAudioProcessorEditor::setChromeVisible(bool visible)
 {
+    // Used by the headless screenshot tool for the README / release
+    // image: hide the conjius logo, the latency label, AND the bypass
+    // button so the screenshot captures the bare plugin UI.
     showChrome = visible;
     latencyLabel.setVisible(visible);
     latencyHitArea.setVisible(visible);
+    bypassButton.setVisible(visible);
     repaint();
 }
 
@@ -134,7 +145,7 @@ void BoostorAudioProcessorEditor::timerCallback()
         // Algorithmic latency — what the host compensates for and what users
         // hear vs. bypass. Boostor's is zero (no buffering / no FFT).
         float latencyMs = processorRef.getAlgorithmicLatencyMs();
-        latencyLabel.setText("LATENCY: " + juce::String(latencyMs, 1) + "ms",
+        latencyLabel.setText("LATENCY: " + juce::String(latencyMs, 3) + "ms",
                              juce::dontSendNotification);
     }
 
@@ -252,7 +263,10 @@ void BoostorAudioProcessorEditor::paint(juce::Graphics& g)
                      / static_cast<float>(titleLogoImage.getHeight());
         float titleW = titleH * aspect;
         float titleX = (w - titleW) * 0.5f;
-        float titleY = h * 0.085f;  // logo nudged up ~25px from the border top
+        // Logo sits ~half-logo-height lower than before so it clears the new
+        // bypass button in the top-right corner and feels less cramped
+        // against the border arc.
+        float titleY = h * 0.085f + titleH * 0.5f;
         g.drawImage(titleLogoImage,
                     juce::Rectangle<float>(titleX, titleY, titleW, titleH),
                     juce::RectanglePlacement::centred);
@@ -292,6 +306,33 @@ void BoostorAudioProcessorEditor::resized()
     }
 
     float w = static_cast<float>(getWidth());
+
+    // Bypass button — sits OUTSIDE the orange border, tucked into the
+    // window's top-right corner with a small gap from both edges. The
+    // border (drawn in paint() after children) doesn't overlap the
+    // button because the button lives in the corner area outside the
+    // border's rounded rect.
+    {
+        const float scaleF  = w / static_cast<float>(KnobDesign::defaultSize);
+        const float edgeGap = 8.0f  * scaleF;
+        const float btnSize = 34.0f * scaleF;
+        const float btnX    = static_cast<float>(getWidth()) - edgeGap - btnSize;
+        const float btnY    = edgeGap;
+        bypassButton.setBounds(static_cast<int>(btnX),
+                               static_cast<int>(btnY),
+                               static_cast<int>(btnSize),
+                               static_cast<int>(btnSize));
+        bypassButton.toFront(false);
+
+        // Ring stroke matches the knob's outline stroke — boostor draws
+        // the knob at windowSize * 0.42 (see LookAndFeel below) with
+        // KnobDesign::knobStrokeFrac, so we reuse exactly the same
+        // thickness formula. The ring is stroked inside the disc bounds
+        // so the centred power glyph keeps its identical size.
+        const float windowSize = juce::jmin(w, static_cast<float>(getHeight()));
+        const float knobDiameter = windowSize * 0.42f;
+        bypassButton.setRingStrokeWidth(knobDiameter * KnobDesign::knobStrokeFrac);
+    }
 
     // Dynamic "Gain" label — placed below the title logo
     float gainFontSize = w * KnobDesign::gainLabelScale;
